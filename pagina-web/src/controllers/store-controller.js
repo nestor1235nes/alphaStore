@@ -36,4 +36,5 @@ export const showStore = async (req, res) => {
         user: req.user.id,
     });
     res.json(store);
-};
+}; 
+

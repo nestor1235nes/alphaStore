@@ -1,53 +1,101 @@
-import React, { Component } from "react";
+import React, { Component, useState} from "react";
+import { useForm } from 'react-hook-form';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import { Link } from 'react-router-dom';
+import { useNotification } from "../context/NotificationContext";
 
 import "./HomePage.css";
 
 
 
-const HomePage = () => {
+function HomePage () {
+
+
+    const {register, handleSubmit} = useForm();
+    const { sendMessage } = useNotification();
+
+    const onSubmit = handleSubmit((data) => {
+        console.log(data);
+        sendMessage(data);
+        
+    })
 
     const settings = {
         dots: true,     
         fade: true,
         infinite: true,
-        slidesToShow: 2,
+        slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
         speed: 1000,
         autoplaySpeed: 5000,
+        cssEase: "linear"
         
       };
 
+      var settingss = {
+        dots: true,
+        infinite: true,
+        cssEase: "linear",
+        autoplay: true,
+        autoplaySpeed: 4000,
+        speed: 500,
+        slidesToShow: 3,
+        slidesToScroll: 4,
+        initialSlide: 0,
+        responsive: [
+          {
+            breakpoint: 1024,
+            settings: {
+              slidesToShow: 3,
+              slidesToScroll: 3,
+              infinite: true,
+              dots: true
+            }
+          },
+          {
+            breakpoint: 600,
+            settings: {
+              slidesToShow: 2,
+              slidesToScroll: 2,
+              initialSlide: 2
+            }
+          },
+          {
+            breakpoint: 480,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1
+            }
+          }
+        ]
+      };
+
     return(
-        <div>
+        <div className="all-container">
             <img
                 src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FImagen%20varias&files=Avatar_upscayl_4x_realesrgan-x4plus.png"
                 alt="Logo"
                 className="logo-home"
             />
-            <div class="menu-container">
-                <a href="#alphanet" class="menu-item">AlphaNet</a>
-                <a href="#alphastore" class="menu-item">AlphaStore</a>
-                <a href="#enviar-mensaje" class="menu-item">Enviar Mensaje</a>
+            <div className="menu-container">
+                <a href="#alphanet" className="menu-item">AlphaNet</a>
+                <a href="#alphastore" className="menu-item">AlphaStore</a>
+                <a href="#enviar-mensaje" className="menu-item">Enviar Mensaje</a>
             </div>
             <Slider {...settings}>
                 <div className="container-carrusel">
-                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/index.php/apps/files_sharing/ajax/publicpreview.php?file=%2FAN%204%2FFacebook-01.jpg&c=4453350cec9e335ef5d5b7f8bcd10650&x=1920&y=1920&a=1&t=WgTq9kGcCfCceYs" alt="Logo-Alphanet" />
+                    <img className= 'imagen-carrusel' src="https://scontent-scl2-1.xx.fbcdn.net/v/t39.30808-6/300009909_489106809887753_4860842056507111404_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9534ce&_nc_eui2=AeGAfSu23Z5XI3Fhb82mNIjAIT8HFsooLZMhPwcWyigtkz0NNfZda_c2ftQisNAyBPOuVKNh7M7v6MRGWVBB4mr2&_nc_ohc=7oSJPMeQe5QAX9m05Cb&_nc_ht=scontent-scl2-1.xx&oh=00_AfBjCTAFG0d2bVjt-ypvcpwMzlhYtvo7ahPjgY4azOWihA&oe=65A47374" alt="Logo-Alphanet" />
                 </div>
                 <div className="container-carrusel">
-                    <img className= 'imagen-carrusel' src="https://img.freepik.com/vector-premium/codificacion-programacion-software-desarrollo-web-aplicacion-dispositivos-computadora-portatil_251139-154.jpg?size=626&ext=jpg" alt="Facebook-01" />
-                    <div className="second-image">
-                        <h1 className="tittle-second-images">Optimiza al <strong>MÁXIMO</strong></h1>
-                        <h1 className="tittle-second-images" >tú negocio</h1>
-                        <h1 className="tittle-second-image">Alpha<strong>Store</strong></h1>
-                        <div>
-                            <img className= 'icon-second-image' src="https://cdn-icons-png.flaticon.com/512/5136/5136521.png" alt="Facebook-01" />
-                        </div>
-                    </div>
+                    <img className= 'imagen-carrusel' src="https://scontent-scl2-1.xx.fbcdn.net/v/t39.30808-6/345596053_3147604788717599_838139558782195314_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9534ce&_nc_eui2=AeE6U2rBGuz0AMzOjeV5mladkT2s9kxJVM-RPaz2TElUz0JhgQ_JYjt6J0PT-aO-jwPTuWCfbT2RV_8vy0Yo5bkE&_nc_ohc=GlehmdVl5sQAX_FMgn4&_nc_ht=scontent-scl2-1.xx&oh=00_AfD7HRB0IOB1BrrD7eiLUK5Whwb07xuOPhdJQKgkKVs8eg&oe=65A50A20" alt="Facebook-01" />
+                    
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://scontent-scl2-1.xx.fbcdn.net/v/t39.30808-6/343921625_980563982937090_4660175409229311949_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9534ce&_nc_eui2=AeERp2Y5E9B16nL8jCeNVg0-d8BQAknA0Ap3wFACScDQCkNrGU5ny-8NF2Trd6a0MfGpx23oS-v0lwwTk0F2hR1O&_nc_ohc=SEa49wUzYjAAX_YD3jE&_nc_ht=scontent-scl2-1.xx&oh=00_AfB5W1mZohRrCpo8PdXDNJznDz_IF2lfKqw5z7_JSDkChg&oe=65A4489B" alt="Facebook-01" />
+                    
                 </div>
             </Slider>
             <hr className="line"></hr>
@@ -59,13 +107,13 @@ const HomePage = () => {
                 optimización de sistemas.
             </p>
             
-            <div class="card-container">
+            <div className="card-container">
                 
-                <div class="card">
-                <img className="card-image-service " src="https://cdn-icons-png.flaticon.com/512/2345/2345548.png"></img>
+                <div className="card">
+                
                     <h1 className="servicios"><strong>Servicios</strong></h1>
                     
-                    <ul class="servicios-lista">
+                    <ul className="servicios-lista">
                         <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Recuperación de datos"/> Recuperación de datos.</li>
                         <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Formateo profundo"/> Formateo profundo.</li>
                         <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Asesorías"/> Asesorías.</li>
@@ -76,15 +124,15 @@ const HomePage = () => {
                     </ul>
                     
                 </div>
-                <div class="card">
-                <img className="card-image-service " src="https://assets.stickpng.com/images/5a452570546ddca7e1fcbc7d.png"></img>
-                    <h1 className="servicios"><strong>Contacto</strong></h1>
+                <div className="card">
+               
+                    <h1 className="servicios-contacto"><strong>Contacto</strong></h1>
 
-                    <ul class="servicios-lista">
+                    <ul className="servicios-lista">
                         <li><img className="tick" src="https://static-00.iconduck.com/assets.00/whatsapp-fill-logo-icon-512x512-gg76jrxj.png" alt="Recuperación de datos"/> +56 9 5252 5658</li>
                         <li><img className="tick" src="https://www.pngitem.com/pimgs/m/173-1737238_computer-icons-email-telephone-circle-email-icon-png.png" alt="Formateo profundo"/> contacto@alphanetcurico.cl</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/4494/4494479.png" alt="Asesorías"/> <a href="https://www.facebook.com/alphanet.s.t" class="facebook">Alphanet Curico</a></li>
-                        <li><img className="tick" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROd6Bj7hnqwvQO_dZFBHIyAbKISb4Z-3ySUg&usqp=CAU" alt="Asesorías"/> <a href="https://www.instagram.com/alphanet_curico?igsh=ZXJ2Z244aW14anVl" class="facebook">alphanet_curico</a></li>
+                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/4494/4494479.png" alt="Asesorías"/> <a href="https://www.facebook.com/alphanet.s.t" className="facebook">Alphanet Curico</a></li>
+                        <li><img className="tick" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROd6Bj7hnqwvQO_dZFBHIyAbKISb4Z-3ySUg&usqp=CAU" alt="Asesorías"/> <a href="https://www.instagram.com/alphanet_curico?igsh=ZXJ2Z244aW14anVl" className="facebook">alphanet_curico</a></li>
                     </ul>
 
                 </div>
@@ -118,37 +166,82 @@ const HomePage = () => {
                     <Link to= "/login" >Ir a la página</Link>
                 </button>
 
+            <hr  className="line"></hr>
+
+            <Slider {...settingss}>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FNuevo%20dise%C3%B1o%20GAMER&files=Aviso-1.jpg" alt="Logo-Alphanet" />
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FNuevo%20dise%C3%B1o%20GAMER&files=Aviso-2.jpg" alt="Facebook-01" />
+                    
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FNuevo%20dise%C3%B1o%20GAMER&files=Aviso-3.jpg" alt="Facebook-01" />
+                    
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FNuevo%20dise%C3%B1o%20GAMER&files=Aviso-4.jpg" alt="Facebook-01" />
+                    
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/index.php/apps/files_sharing/ajax/publicpreview.php?file=%2FNuevo%20dise%C3%B1o%20GAMER%2Fpublicidad%20pagina%20web%202023.png&c=a1021deab4b695ff4131ed3a01a2de3e&x=1920&y=1920&a=1&t=WgTq9kGcCfCceYs" alt="Facebook-01" />
+                    
+                </div>
+                <div className="container-carrusel">
+                    <img className= 'imagen-carrusel' src="https://cloud.alphanetcurico.com/index.php/apps/files_sharing/ajax/publicpreview.php?file=%2FNuevo%20dise%C3%B1o%20GAMER%2FVenta%20de%20licencias.JPG&c=c0b821b1025f3c3aaef27a44a14d3e89&x=1920&y=1920&a=1&t=WgTq9kGcCfCceYs" alt="Facebook-01" />
+                    
+                </div>
+                
+            </Slider>
+
             <hr id="enviar-mensaje" className="line"></hr>
 
             <div  className="container-form">
                 <div className="formulario">
-                    <form >
-                        <label htmlFor="username" className='name-email'>Nombre</label>
-                        <input type="text" className='inputs-form' placeholder='Juan Perez'  id="username" />
+                    <form onSubmit={onSubmit}>
                         
 
-                        <label htmlFor="email" className='name-email'>Email</label>
-                        <input type="email" className='inputs-form' placeholder='juanperez@gmail.com'  id="email" />
+                        <label htmlFor="name" className='name-email'>Nombre</label>
+                        <input
+                            type="text"
+                            className='inputs-form'
+                            placeholder='Juan Perez'
+                            {...register("name")}
+                            autoFocus
+                        />
 
                         <label htmlFor="email" className='name-email'>Email</label>
-                        <input type="text" className='inputs-form' placeholder='912332122'  id="email" />
-                    
+                        <input
+                            type="email"
+                            className='inputs-form'
+                            placeholder='juanperez@gmail.com'
+                            {...register("email")}
+                        />
 
-                        <label htmlFor="password" className='name-email'>Mensaje</label>
-                        <input type="text" className='inputs-message' placeholder='Hola, soy Juan Perez, necesito que se comunique conmigo por favor.'  id="password" />
-                        
-                        <div>
+                        <label htmlFor="phone" className='name-email'>Teléfono</label>
+                        <input
+                            type="number"
+                            className='inputs-form'
+                            placeholder='912332122'
+                            {...register("phone")}
+                        />
+
+                        <label htmlFor="message" className='name-email'>Mensaje</label>
+                        <input
+                            type="text"
+                            className='inputs-message'
+                            placeholder='Hola, soy Juan Perez, necesito que se comunique conmigo por favor.'
+                            {...register("message")}
+                        />
+
                             <button className='boton-send'>Enviar
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/929/929926.png"
-                                className="send"
-                            />
+                                
                             
                             </button>
-                            
-                        </div>
-                        
                     </form>
+
+                    
                 </div>
             </div>
             <div className="footer">
