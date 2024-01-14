@@ -1,10 +1,19 @@
 import Notification from '../models/notification-model.js';
 
 
-export const showMessage = async (req, res) => {
-    const message = await Notification.findById(req.params.id);
-    if(!product) return res.status(404).json({message: "No hay mensajes"});
-    res.json(message);
+export const getMessage = async (req, res) => {
+    try {
+        const message = await Notification.find();
+
+        if (!message) {
+            return res.status(404).json({ message: "No hay mensajes en la colección" });
+        }
+
+        res.json(message);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
 };
 
 export const sendMessage = async (req, res) => {

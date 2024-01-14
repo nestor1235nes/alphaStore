@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { sendMessageRequest } from "../api/notification";
+import { sendMessageRequest, getMessageRequest } from "../api/notification";
  
 export const NotificationContext = createContext ();
 
@@ -13,17 +13,28 @@ export const useNotification = () => {
 
 export function NotificationProvider ({children}) {
     const [messages, setMessage] = useState([]);
+    const [data, setData] = useState([]);
 
     const sendMessage = async (message) =>{
         const res = await sendMessageRequest(message);
-        console.log(res)
+        
+    }
+
+    const getMessage = async () =>{
+        const res = await getMessageRequest();
+        
+        setData(res.data);
+
+        return(res.data);
+        
     }
 
     return(
         <NotificationContext.Provider
             value={{
                 messages,
-                sendMessage
+                sendMessage,
+                getMessage,
             }}
         >
             {children}
