@@ -26,6 +26,7 @@ export const AuthProvider = ({children}) => {
             console.log(res.data);
             setUser(res.data);
             setAuthenticated(true);
+           
         } catch (error) {
             console.log(error.response)
             setErrors(error.response.data)
@@ -47,6 +48,13 @@ export const AuthProvider = ({children}) => {
         }
     
 
+    };
+
+    const signout = () => {
+        Cookies.remove("token");
+        setisAuthenticated(false);
+        setUser(null);
+        
     };
 
     useEffect(() => {
@@ -97,6 +105,7 @@ export const AuthProvider = ({children}) => {
         <AuthContext.Provider value ={{
             signup,
             signin,
+            signout,
             user,
             isAuthenticated,
             errors,

@@ -14,4 +14,4 @@ router.post('/logout', logout);
 router.get('/verify', verifyToken);
 router.get('/profile', authRequired, profile);
 
-export default router 
+export default router  

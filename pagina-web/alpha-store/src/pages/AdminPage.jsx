@@ -46,8 +46,8 @@ function AdminPage(){
                 Notificaciones
             </h1>
             <div className='table-container'>
-                <table>
-                    <thead>
+                <table className='table-table'>
+                    <thead className='head-table'>
                         {
                             table.getHeaderGroups().map((headerGroup, i) =>(
                                 <tr key={i}>
@@ -69,7 +69,7 @@ function AdminPage(){
                             table.getRowModel().rows.map((row, i) =>(
                                 <tr key={i}>
                                     {row.getVisibleCells().map((cell,i) =>(
-                                        <td key={i}>
+                                        <td key={i} className='celdas'>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>
                                     ))}

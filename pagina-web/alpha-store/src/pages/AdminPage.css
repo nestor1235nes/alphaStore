@@ -15,38 +15,36 @@
 }
 
 /* Estilos para la tabla */
-table {
+.table-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 50px;
-    
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     font-size: 0.7rem;
   }
   
   /* Estilos para el encabezado de la tabla */
-  thead th {
+  .head-table th {
     background-color: #212338; /* Color de fondo del título de las columnas */
     color: #ffffff; /* Color del texto en el título de las columnas */
     padding: 1%;
     font-size: 1.0rem; /* Tamaño de fuente del título de las columnas */
-    border-radius: 10px;
+    
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     
 }
-
+ 
   
   /* Estilos para las celdas de la tabla */
-  td {
-    border: 1px solid #ffffff; /* Bordes de las celdas */
-    padding: 2%;
+  .celdas {
+    border: 1px solid #000000; /* Bordes de las celdas */
+    padding: 1%;
     font-size: 1rem;
-    background-color: #c9c9c9;
-    margin: 50px;
+    background-color: #ebebeb;
+    
   }
 
 
-  td:nth-child(1){
+  .celdas:nth-child(1){
     font-size: 150%; /* Tamaño de fuente para las columnas "email" y "mensaje" */
     font-weight: bold;
 }

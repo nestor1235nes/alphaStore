@@ -9,6 +9,7 @@ import AdminPage from "./pages/AdminPage.jsx"
 import ProtectedRoute from "./ProtectedRoute.jsx"
 
 import { NotificationProvider } from "./context/NotificationContext.jsx"
+import { StoreProvider } from "./context/StoreContext.jsx"
 
 
 
@@ -16,20 +17,22 @@ function App(){
   return (
     <AuthProvider>
       <NotificationProvider>
-        <BrowserRouter>
-          <Routes>
-          <Route path="/" element={<HomePage />}></Route>
-            <Route path="/login" element={<PageLogin />}></Route>
-            <Route path="/register" element={<RegisPage />}></Route>
+        <StoreProvider>
+          <BrowserRouter>
+            <Routes>
+            <Route path="/" element={<HomePage />}></Route>
+              <Route path="/login" element={<PageLogin />}></Route>
+              <Route path="/register" element={<RegisPage />}></Route>
 
 
-            <Route element={<ProtectedRoute/>}>
-              <Route path="/salepoint" element={<SalePoint />}></Route>
-              <Route path="/adminpage" element={<AdminPage />}></Route>
-            
-            </Route>
-          </Routes>
-        </BrowserRouter>
+              <Route element={<ProtectedRoute/>}>
+                <Route path="/salepoint" element={<SalePoint />}></Route>
+                <Route path="/adminpage" element={<AdminPage />}></Route>
+              
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </StoreProvider>
       </NotificationProvider>
     </AuthProvider>
   )

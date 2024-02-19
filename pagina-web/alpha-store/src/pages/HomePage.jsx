@@ -17,7 +17,6 @@ function HomePage () {
     const { sendMessage } = useNotification();
 
     const onSubmit = handleSubmit((data) => {
-        console.log(data);
         sendMessage(data);
         
     })
@@ -107,7 +106,7 @@ function HomePage () {
                 optimización de sistemas.
             </p>
             
-            <div className="card-container">
+            <div className="card-container"> 
                 
                 <div className="card">
                 

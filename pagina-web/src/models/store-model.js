@@ -10,15 +10,15 @@ const storeSchema = new mongoose.Schema({
         required: true,
     },
     productAmount: {
-        type: Number,
+        type: String,
         required: true,
     },
     priceProvider: {
-        type: Number,
+        type: String,
         required: true,
     },
     salePrice: {
-        type: Number,
+        type: String,
         required: true,
     },
     user:{

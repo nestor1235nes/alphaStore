@@ -6,7 +6,7 @@ import { addProductSchema } from "../schemas/store-schema.js";
 
 const router = Router();
 router.get("/store", authRequired, showStore);
-router.get("/store/:id", authRequired, getProduct);
+router.get("/store/:productCode", authRequired, getProduct);
 router.post("/store", authRequired, validateSchema(addProductSchema), addProduct);
 router.delete("/store/:id", authRequired, deleteProduct);
 router.put("/store/:id", authRequired, editProduct);
