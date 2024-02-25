@@ -34,7 +34,7 @@ const RegisPage = () => {
         
             
         <form onSubmit={onSubmit}>
-          <label htmlFor="username" className='tittle-register'>Nombre</label>
+          <label htmlFor="username" className='tittle-register'>Nombre</label> 
           <input type="text" className='inputs' placeholder='Juan Perez' {... register('username', { required: true })} id="username" />
           {errors.username && <p className="text-red-500"> Username es requerido</p>}
 

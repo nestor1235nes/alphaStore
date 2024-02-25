@@ -10,12 +10,16 @@ import { Link } from 'react-router-dom';
 const PageLogin = () => {
   
     const { register, handleSubmit, formState: { errors } }= useForm();
-    const {signin, errors: signinErrors} = useAuth();
-    
+    const {signin, errors: signinErrors, isAuthenticated} = useAuth();
+    const navigate = useNavigate();
+
     const onSubmit = handleSubmit((data) =>{
       signin(data);
     })
 
+    useEffect(()=>{
+      if(isAuthenticated) navigate("/salepoint")
+    },[isAuthenticated]) 
 
     return (
       <div className="registration-page">
