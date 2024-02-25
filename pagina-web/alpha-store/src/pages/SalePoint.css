@@ -104,7 +104,7 @@
     margin-left: 5%;
     width: 70%;
     display: flex;
-    background-color:#eaeaea;
+    
 }
 
 
@@ -275,4 +275,13 @@
     text-align: center;
     
 }
+.celdasTableShoppingCar {
+    
+    border: 1px solid #000000; /* Bordes de las celdas */
+    font-size: 1rem;
+    background-color: #ebebeb;
+    text-align: center;
+
+    
+  }
 

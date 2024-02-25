@@ -10,7 +10,7 @@ import ProtectedRoute from "./ProtectedRoute.jsx"
 
 import { NotificationProvider } from "./context/NotificationContext.jsx"
 import { StoreProvider } from "./context/StoreContext.jsx"
-
+import { SaleProvider } from "./context/SaleContext.jsx"
 
 
 function App(){
@@ -18,20 +18,22 @@ function App(){
     <AuthProvider>
       <NotificationProvider>
         <StoreProvider>
-          <BrowserRouter>
-            <Routes>
-            <Route path="/" element={<HomePage />}></Route>
-              <Route path="/login" element={<PageLogin />}></Route>
-              <Route path="/register" element={<RegisPage />}></Route>
+          <SaleProvider>
+            <BrowserRouter>
+              <Routes>
+              <Route path="/" element={<HomePage />}></Route>
+                <Route path="/login" element={<PageLogin />}></Route>
+                <Route path="/register" element={<RegisPage />}></Route>
 
 
-              <Route element={<ProtectedRoute/>}>
-                <Route path="/salepoint" element={<SalePoint />}></Route>
-                <Route path="/adminpage" element={<AdminPage />}></Route>
-              
-              </Route>
-            </Routes>
-          </BrowserRouter>
+                <Route element={<ProtectedRoute/>}>
+                  <Route path="/salepoint" element={<SalePoint />}></Route>
+                  <Route path="/adminpage" element={<AdminPage />}></Route>
+                
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </SaleProvider>
         </StoreProvider>
       </NotificationProvider>
     </AuthProvider>

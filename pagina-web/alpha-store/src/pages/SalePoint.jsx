@@ -2,34 +2,32 @@ import React from "react";
 import './SalePoint.css';
 import { useForm } from 'react-hook-form';
 import {useReactTable, getCoreRowModel, flexRender} from '@tanstack/react-table';
-import { useNotification } from "../context/NotificationContext";
 import { useEffect, useState } from 'react';
 import { Modal , Dropdown, Form, Button } from 'react-bootstrap';
 import { useAuth } from "../context/AuthContext";
 import { useStore } from "../context/StoreContext";
+import { ToastContainer, toast } from 'react-toastify';
 
 
 function SalePoint(){
 
     const {register, handleSubmit} = useForm();
     const { signout, user } = useAuth();
-    const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
-
-    const [showModalProduct, setShowModalProduct] = useState(false);
-    const handleModalShowProduct = () => setShowModalProduct(true);
-    const handleModalCloseProduct = () => setShowModalProduct(false);
 
     const [showModalEmployee, setShowModalEmployee] = useState(false);
     const handleModalShowEmployee = () => setShowModalEmployee(true);
     const handleModalCloseEmployee = () => setShowModalEmployee(false);
 
-    const [showModalEdit, setShowModalEdit] = useState(false);
-    const handleModalShowEdit = () => setShowModalEdit(true);
-    const handleModalCloseEdit = () => setShowModalEdit(false);
+
     
+    
+    
+    //Obtengo los productos desde la base de datos del almacen
+    const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
+
+    //////////////////////////////////////////////////////////////////////////
+    //Añadiendo productos al carro de compras
     const [dataShoppingCar, setDatashoppingCar] = useState([]);
-    
-    
     const onSubmit = handleSubmit(async (data) => {
         const result = await getProduct(data);
     
@@ -39,16 +37,73 @@ function SalePoint(){
             resultSalePrice: result.salePrice,
             resultID: result._id,
             resultPriceProvider: result.priceProvider,
-            resultProductCode: result.productCode
+            resultProductCode: result.productCode,
+            cont: 1,
+
         };
     
         
-        setDatashoppingCar(prevData => prevData.concat(newProduct));
-        
-        
-    })
+        if (dataShoppingCar.length === 0) {
+        // El carrito está vacío, agregar el producto con cantidad 1
+            console.log("carrito vacio");
+            setDatashoppingCar([newProduct]);
+        } else {
+            // El carrito no está vacío, verificar si el producto ya está en el carrito
+            const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
+
+            if (existingProductIndex !== -1) {
+                // El producto ya está en el carrito, aumentar la cantidad en 1
+                console.log("producto existente");
+                setDatashoppingCar(prevData => {
+                    const newData = prevData.map(item => {
+                        if (item.resultID === newProduct.resultID) {
+                            // Actualizar la cantidad del producto existente
+                            return {
+                                ...item,
+                                cont: item.cont + 1
+                            };
+                        }
+                        return item;
+                    });
+                    return newData;
+                });
+            } else {
+                console.log("producto no existente");
+                // El producto no está en el carrito, agregarlo con cantidad 1
+                setDatashoppingCar(prevData => [...prevData, newProduct]);
+            }
+        }
+ 
+    });
     
-    
+    const columnsShoppingCar = [
+        {
+            header: "Cantidad",
+            accessorKey: 'cont'
+        },
+        {
+            header: "Nombre",
+            accessorKey: 'resultProductName'
+        },
+        {
+            header: "Precio unitario",
+            accessorKey: 'resultSalePrice'
+        },
+        
+    ]
+
+    const shoppingCar = useReactTable({
+        data: dataShoppingCar,
+        columns: columnsShoppingCar,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
+    //////////////////////////////////////////////////////////////////////////
+    //Modal para agregar, editar o eliminar algun producto del almacen
+    const [showModalProduct, setShowModalProduct] = useState(false);
+    const handleModalShowProduct = () => setShowModalProduct(true);
+    const handleModalCloseProduct = () => setShowModalProduct(false);
+
     const [selectedProduct, setSelectedProduct] = useState("");
     const editProductButtonImageSubmit = (row) => {
         setSelectedProduct(row);
@@ -90,7 +145,9 @@ function SalePoint(){
         });
         
         setDataModalProduct(modalProductData);
+        toast.success('Producto editado exitosamente');
         handleModalCloseEdit();
+        
     }
     const deleteProductButtonSubmit = async (productID) => { 
         const isConfirmed = window.confirm('¿Estás seguro que quieres eliminar este producto?');
@@ -118,56 +175,10 @@ function SalePoint(){
             });
         
         setDataModalProduct(modalProductData);
+        toast.success('Producto eliminado');
         }
     };
 
-    const { getMessage } = useNotification();
-    const [data, setData] = useState([]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const result = await getMessage();
-            setData(result);
-            
-        };
-
-        fetchData();
-    }, []);
-
-    
-    const logOutSubmit = async () => {
-        const result = await signout();
-    };
-
-
-    const [dataModalProduct, setDataModalProduct] = useState([]);
-    
-    
-
-    const fetchDataModalProduct = async () => {
-        try {
-            const result = await getProducts();
-            const modalProductData = result.map(product => ({
-                resultProductAmount: product.productAmount,
-                resultProductName: product.productName,
-                resultSalePrice: product.salePrice,
-                resultID: product._id,
-                resultPriceProvider: product.priceProvider,
-                resultProductCode: product.productCode
-            }));
-            setDataModalProduct(modalProductData);
-        } catch (error) {
-            console.error("Error al obtener datos:", error);
-        }
-    };
-    const handleOpenModalAndFetchData = () => {
-        handleModalShowProduct(); // Abre el modal
-        fetchDataModalProduct(); // Obtiene los productos
-    };
-
-
-
-    
     const addProductSubmit = async (event) => {
         event.preventDefault();
         const productName = event.target.productName.value;
@@ -206,26 +217,31 @@ function SalePoint(){
         
         setDataModalProduct(modalProductData);
         event.target.reset();
+        toast.success('Producto agregado exitosamente');
     };
 
+    const [dataModalProduct, setDataModalProduct] = useState([]);
 
-
-
-    const columnsShoppingCar = [
-        {
-            header: "Cantidad",
-            accessorKey: 'resultProductAmount'
-        },
-        {
-            header: "Nombre",
-            accessorKey: 'resultProductName'
-        },
-        {
-            header: "Precio",
-            accessorKey: 'resultSalePrice'
-        },
-        
-    ]
+    const fetchDataModalProduct = async () => {
+        try {
+            const result = await getProducts();
+            const modalProductData = result.map(product => ({
+                resultProductAmount: product.productAmount,
+                resultProductName: product.productName,
+                resultSalePrice: product.salePrice,
+                resultID: product._id,
+                resultPriceProvider: product.priceProvider,
+                resultProductCode: product.productCode
+            }));
+            setDataModalProduct(modalProductData);
+        } catch (error) {
+            console.error("Error al obtener datos:", error);
+        }
+    };
+    const handleOpenModalAndFetchData = () => {
+        handleModalShowProduct(); // Abre el modal
+        fetchDataModalProduct(); // Obtiene los productos
+    };
 
     const columnsProduct = [
         {
@@ -242,17 +258,24 @@ function SalePoint(){
         },
     ]
     
-    const shoppingCar = useReactTable({
-        data: dataShoppingCar,
-        columns: columnsShoppingCar,
-        getCoreRowModel: getCoreRowModel(),
-    });
-
     const tableAddEditDeleteProduct = useReactTable({
         data: dataModalProduct,  // Cambiado a 'data' en lugar de 'dataModalProduct'
         columns: columnsProduct,
         getCoreRowModel: getCoreRowModel(),
     });
+
+//////////////////////////////////////////////////////////////////////////
+    //Funcion para cerrar sesion
+    const logOutSubmit = async () => {
+        const result = await signout();
+    };
+
+
+//////////////////////////////////////////////////////////////////////////
+//Modal para agregar empleados
+    const [showModalEdit, setShowModalEdit] = useState(false);
+    const handleModalShowEdit = () => setShowModalEdit(true);
+    const handleModalCloseEdit = () => setShowModalEdit(false);
 
     const { signup, isAuthenticated, errors: registerErrors } = useAuth();
     const sendRegisterSubmit = async (event) => {
@@ -351,6 +374,7 @@ function SalePoint(){
                                     </Button>
                                     
                                 </Form>
+                                <ToastContainer />
                             </div>
                             <table className="tableStyle">
                             <thead className="headTableModal">
@@ -384,6 +408,7 @@ function SalePoint(){
                                                     <button style={{width: '30%', height: '25px', borderRadius:'10px', marginLeft:'15%'}} onClick={() => {
                                                         console.log(row.original.resultID)
                                                         deleteProductButtonSubmit(row.original.resultID);
+                                                        <ToastContainer />
                                                     }}>
                                                         
                                                     <img
@@ -450,6 +475,7 @@ function SalePoint(){
                             </Button>
                             
                         </Form>
+                        <ToastContainer />
                     </Modal.Body>
                 </Modal>
                 <Modal show={showModalEmployee} onHide={handleModalCloseEmployee}>
@@ -507,10 +533,11 @@ function SalePoint(){
             <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', alignItems: 'center' }}>
                 <input
                     className="findInput"
-                    placeholder="Agregar producto al carrito con código o nombre"
+                    placeholder="Código de barras del producto"
                     {...register("producto")} // Registra el input con el nombre "producto"
+                    required
                 ></input>
-                <button className="findButton">Agregar</button>
+                <button className="findButton">Agregar al carrito</button>
             </form>
                 
                 <button className="closeBox">Cerrar Caja</button>
@@ -544,11 +571,11 @@ function SalePoint(){
                                 {shoppingCar.getRowModel().rows.map((row, i) => (
                                     <tr key={i}>
                                         {row.getVisibleCells().map((cell, j) => (
-                                            <td key={j}>
+                                            <td key={j} className="celdasTableShoppingCar">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </td>
                                         ))}
-                                        <td>
+                                        <td >
                                             <div className="lastColumn">
                                                 <button style={{ width: '50%', height: '25px', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
                                                     console.log(row.original.resultID);
@@ -570,7 +597,11 @@ function SalePoint(){
                 </div>
                 <div className="totalContainer">
                     <h1 style={{fontSize:'350%'}}>Total:</h1>
-                    <h1 style={{fontSize:'500%', }}>69000</h1>
+
+                    
+                    <h1 style={{fontSize:'500%', }}>
+                        {dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0)}
+                    </h1>
                 </div>
                 
             
