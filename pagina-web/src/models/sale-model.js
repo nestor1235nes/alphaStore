@@ -1,34 +1,20 @@
 import mongoose from "mongoose";
 
+const saleProductSchema = new mongoose.Schema({
+    productName: String,
+    productCode: String,
+    saleAmount: String,
+    priceProvider: String,
+    salePrice: String,
+    saleTotal: String,
+});
+
 const saleSchema = new mongoose.Schema({
-    productName:{
-        type: String,
-        required: true,
-    },
-    productCode: {
-        type: String,
-        required: true,
-    },
-    saleAmount: {
-        type: String,
-        required: true,
-    },
-    priceProvider: {
-        type: String,
-        required: true,
-    },
-    salePrice: {
-        type: String,
-        required: true,
-    },
-    date: {
-        type: String,
-        default: Date.now,
-    },
-    user:{
+    products: [saleProductSchema], // Campo para almacenar los productos
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        require: true
+        required: true
     },
 }, {
     timestamps: true

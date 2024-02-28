@@ -32,21 +32,30 @@ export const getSales = async (req, res) => {
 }
 export const addSale = async (req, res) => {
     try {
-        const { productName , productCode, saleAmount, priceProvider, salePrice } = req.body;
+        const { products } = req.body;
+
+        if (!products || products.length === 0) {
+            return res.status(400).json({ message: "No se han proporcionado productos" });
+        }
+
         const newSale = new Sale({
-            productName, 
-            productCode,
-            saleAmount, 
-            priceProvider,
-            salePrice,
+            products: products.map(product => ({
+                productName: product.productName,
+                productCode: product.productCode,
+                saleAmount: product.saleAmount,
+                priceProvider: product.priceProvider,
+                salePrice: product.salePrice,
+                saleTotal: product.saleTotal,
+            })),
             user: req.user.id,
         });
+
         const savedSale = await newSale.save();
         res.json(savedSale);
     } catch (error) {
-        return res.status(404).json({ message: "No hay productos en la colección" });
+        console.error(error);
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
-
 }
 export const deleteSale = async (req, res) => {
     try {

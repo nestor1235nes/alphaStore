@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Modal , Dropdown, Form, Button } from 'react-bootstrap';
 import { useAuth } from "../context/AuthContext";
 import { useStore } from "../context/StoreContext";
+import { useSale } from "../context/SaleContext";
 import { ToastContainer, toast } from 'react-toastify';
 
 
@@ -26,7 +27,7 @@ function SalePoint(){
     const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
 
     //////////////////////////////////////////////////////////////////////////
-    //Añadiendo productos al carro de compras
+    //Añadiendo o eliminando productos al carro de compras
     const [dataShoppingCar, setDatashoppingCar] = useState([]);
     const onSubmit = handleSubmit(async (data) => {
         const result = await getProduct(data);
@@ -45,7 +46,6 @@ function SalePoint(){
         
         if (dataShoppingCar.length === 0) {
         // El carrito está vacío, agregar el producto con cantidad 1
-            console.log("carrito vacio");
             setDatashoppingCar([newProduct]);
         } else {
             // El carrito no está vacío, verificar si el producto ya está en el carrito
@@ -53,7 +53,6 @@ function SalePoint(){
 
             if (existingProductIndex !== -1) {
                 // El producto ya está en el carrito, aumentar la cantidad en 1
-                console.log("producto existente");
                 setDatashoppingCar(prevData => {
                     const newData = prevData.map(item => {
                         if (item.resultID === newProduct.resultID) {
@@ -75,6 +74,20 @@ function SalePoint(){
         }
  
     });
+
+    const deleteProductShoppingCarButtonSubmit = (productID) => {
+        // Buscar el índice del producto en el array
+        const index = dataShoppingCar.findIndex(product => product.resultID === productID);
+        
+        if (index !== -1) {
+            // Eliminar el producto del array
+            const updatedShoppingCar = [...dataShoppingCar];
+            updatedShoppingCar.splice(index, 1);
+            
+            // Actualizar el estado de dataShoppingCar
+            setDatashoppingCar(updatedShoppingCar);
+        }
+    };
     
     const columnsShoppingCar = [
         {
@@ -292,6 +305,36 @@ function SalePoint(){
 
         const result = await signup(addEmployee);
         console.log(result);
+    };
+
+    ////////////////////////////////////////////////////////////////////////
+    //Seccion para guardar la venta realizada
+    const {createSale} = useSale();
+    const cashButton = async () => {
+        if (dataShoppingCar.length === 0) {
+            toast.error('El carrito de compras está vacío');
+            return;
+        }
+        const totalPrice = dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0);
+        const sale = {
+            products: dataShoppingCar.map(product => ({
+                productName: product.resultProductName,
+                productCode: product.resultProductCode,
+                saleAmount: product.cont.toString(),
+                priceProvider: product.resultPriceProvider,
+                salePrice: product.resultSalePrice,
+                saleTotal: totalPrice.toString(),
+            })),
+        };
+    
+        try {
+            console.log(sale)
+            const resultSale = await createSale(sale);
+            toast.success('Venta realizada');
+            setDatashoppingCar([]);
+        } catch (error) {
+            console.error(`Error creating sale: ${error.message}`);
+        }
     };
 
     return(
@@ -579,7 +622,7 @@ function SalePoint(){
                                             <div className="lastColumn">
                                                 <button style={{ width: '50%', height: '25px', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
                                                     console.log(row.original.resultID);
-                                                    deleteProductButtonSubmit(row.original.resultID);
+                                                    deleteProductShoppingCarButtonSubmit(row.original.resultID);
                                                 }}>
                                                     <img
                                                         src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
@@ -607,13 +650,14 @@ function SalePoint(){
             
                 <div className="payButtonWrapper">
                     <div className="payButtonContainer">
-                        <button className="payButton">
+                        <button className="payButton" onClick={cashButton}>
                             <img
                                 src="https://cdn.icon-icons.com/icons2/2427/PNG/512/cash_icon_147027.png"
                                 className="cashImage"
                             />
                             <span>Pago con efectivo</span>
                         </button>
+                        <ToastContainer />
                         <button className="payButton">
                             <img
                                 src="https://cdn.icon-icons.com/icons2/2104/PNG/512/credit_card_icon_129105.png"

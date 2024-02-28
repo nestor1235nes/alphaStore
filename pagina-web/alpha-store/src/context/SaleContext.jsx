@@ -1,8 +1,10 @@
 import { createContext, useContext, useState } from "react";
+import { createSalesRequest, getSaleRequest, getSalesRequest, deleteSaleRequest } from '../api/sale';
+import { saleSchema } from "../../../src/schemas/sale-scheme";
 
 export const SaleContext = createContext ();
 
-export const useStore = () => {
+export const useSale = () => {
     const context = useContext(SaleContext); 
 
     if(!context){
@@ -15,10 +17,18 @@ export const useStore = () => {
 export const SaleProvider = ({children}) => {
     const [sales, setSales] = useState([]);
 
-    const createSale = async (product) =>{
-        const res = await createSaleRequest(product);
-        console.log(res)
-    }
+    const createSale = async (saleData) => {
+        try {
+            const result = await createSalesRequest(saleData);
+            return result;
+        } catch (error) {
+            console.error(error);
+        }
+        
+    
+        
+    };
+    
     const getSales = async () =>{
         const res =await getSalesRequest(); 
         setSales(res.data);
