@@ -281,7 +281,10 @@
     font-size: 1rem;
     background-color: #ebebeb;
     text-align: center;
-
-    
   }
+.estandarLetter{
+    font-family: "Times New Roman", Times, serif;
+    
+    color: #212338;
+}
 

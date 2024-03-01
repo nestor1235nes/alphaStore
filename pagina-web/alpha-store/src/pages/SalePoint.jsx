@@ -19,11 +19,6 @@ function SalePoint(){
     const handleModalShowEmployee = () => setShowModalEmployee(true);
     const handleModalCloseEmployee = () => setShowModalEmployee(false);
 
-
-    
-    
-    
-    //Obtengo los productos desde la base de datos del almacen
     const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
 
     //////////////////////////////////////////////////////////////////////////
@@ -309,13 +304,54 @@ function SalePoint(){
 
     ////////////////////////////////////////////////////////////////////////
     //Seccion para guardar la venta realizada
+
+    const [showModalPayCash, setShowModalPayCash] = useState(false);
+    const handleModalShowPayCash = () => setShowModalPayCash(true);
+    const handleModalClosePayCash = () => setShowModalPayCash(false);  
+
     const {createSale} = useSale();
-    const cashButton = async () => {
+    const [totalPrice, setTotalPrice] = useState(0); // Estado para almacenar el monto total de la venta
+    const [turned, setTurned] = useState(0);
+
+    const calculatedTurned = (paid, totalp) => {
+        const result = paid - totalp;
+        console.log(result);
+    
+        if (result >= 0) { // Utilizamos result en lugar de turned para verificar si alcanza
+            setTurned(result);
+            confirmSale();
+        } else {
+            toast.error("Dinero inferior al monto total del carrito");
+        }
+    }
+
+
+    const openModalPaid = async () => {
         if (dataShoppingCar.length === 0) {
             toast.error('El carrito de compras está vacío');
             return;
         }
-        const totalPrice = dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0);
+
+        // Calcula el monto total de la venta
+        const total = dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0);
+        setTotalPrice(total);
+
+        handleModalShowPayCash();
+    };
+
+    const handleCashPayment = (amount) => {
+        calculatedTurned(amount, totalPrice); 
+        
+    };
+    const [cashAmount, setCashAmount] = useState("");
+    const handleCashPaymentManual = (e) => {
+        e.preventDefault(); // Evita que se recargue la página al enviar el formulario
+        calculatedTurned(cashAmount, totalPrice);
+        setCashAmount("");
+    };
+
+    const confirmSale = async () => {
+
         const sale = {
             products: dataShoppingCar.map(product => ({
                 productName: product.resultProductName,
@@ -326,16 +362,35 @@ function SalePoint(){
                 saleTotal: totalPrice.toString(),
             })),
         };
-    
+
         try {
-            console.log(sale)
             const resultSale = await createSale(sale);
             toast.success('Venta realizada');
+            handleModalClosePayCash();
+            handleModalShowSaleSuccesful();
             setDatashoppingCar([]);
         } catch (error) {
             console.error(`Error creating sale: ${error.message}`);
         }
+       
     };
+    //Modal para mostrar que la venta fue un exito
+    const [showModalSaleSuccesful, setShowModalSaleSuccesful] = useState(false);
+    const handleModalShowSaleSuccesful = () => setShowModalSaleSuccesful(true);
+    const handleModalCloseSaleSuccesful = () => setShowModalSaleSuccesful(false);
+
+    useEffect(() => {
+        let timer;
+        if (showModalSaleSuccesful) {
+            timer = setTimeout(() => {
+                handleModalCloseSaleSuccesful();
+            }, 5000); // 5000 milisegundos = 5 segundos
+        }
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [showModalSaleSuccesful]);
 
     return(
         <div className="bigContainer">
@@ -650,14 +705,65 @@ function SalePoint(){
             
                 <div className="payButtonWrapper">
                     <div className="payButtonContainer">
-                        <button className="payButton" onClick={cashButton}>
+                        <button className="payButton" onClick={openModalPaid}>
                             <img
                                 src="https://cdn.icon-icons.com/icons2/2427/PNG/512/cash_icon_147027.png"
                                 className="cashImage"
                             />
                             <span>Pago con efectivo</span>
                         </button>
+                        <Modal show={showModalPayCash} onHide={handleModalClosePayCash}>
+                            <Modal.Header closeButton>
+                            <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Pago</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <h1 className="estandarLetter" style={{textAlign:"center", fontSize:'2rem'}}>Seleccione opción rápida</h1>
+                                <Button variant="primary" type="button" onClick={() => handleCashPayment(1000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
+                                $ 1.000
+                                </Button>
+                                <Button variant="primary" type="button" onClick={() => handleCashPayment(2000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
+                                $ 2.000
+                                </Button>
+                                <Button variant="primary" type="button" onClick={() => handleCashPayment(5000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
+                                $ 5.000
+                                </Button>
+                                <Button variant="primary" type="button" onClick={() => handleCashPayment(10000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
+                                $ 10.000
+                                </Button>
+                                <Button variant="primary" type="button" onClick={() => handleCashPayment(20000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
+                                $ 20.000
+                                </Button>
+                                <h1 className="estandarLetter" style={{textAlign:"center", fontSize:'2rem'}}>O ingrese dinero recibido</h1>
+                                <Form style={{textAlign:'center'}}>
+                                    <Form.Group controlId="payCash">
+                                        <Form.Control
+                                            className="modalLeter"
+                                            style={{textAlign:'center'}}
+                                            type="text"
+                                            placeholder="Ingresa monto"
+                                            name="paycash"
+                                            value={cashAmount}
+                                            onChange={(e) => setCashAmount(e.target.value)}
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Button variant="primary" type="submit" onClick={handleCashPaymentManual} style={{marginTop:'10%', backgroundColor:'#344a57'}}>
+                                        Enviar
+                                    </Button>
+                                </Form>
+                            </Modal.Body>
+                        </Modal>
                         <ToastContainer />
+                        <Modal show={showModalSaleSuccesful} onHide={handleModalCloseSaleSuccesful}>
+                            <Modal.Header closeButton>
+                                <Modal.Title style={{fontSize:'30px'}} className="modalLeter">¡Gracias por su compra!</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <h1 className="estandarLetter" style={{textAlign:'center'}}>Su vuelto es de</h1>
+                                <h1 className="estandarLetter" style={{textAlign:'center', fontSize:'4rem'}}>${turned}</h1>
+                            </Modal.Body>
+                        </Modal>
                         <button className="payButton">
                             <img
                                 src="https://cdn.icon-icons.com/icons2/2104/PNG/512/credit_card_icon_129105.png"
