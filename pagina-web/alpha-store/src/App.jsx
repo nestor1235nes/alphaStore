@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage.jsx"
 import { AuthProvider } from "./context/AuthContext.jsx"
 import SalePoint from "./pages/SalePoint.jsx"
 import AdminPage from "./pages/AdminPage.jsx"
+import PageGraphics from "./pages/PageGraphics.jsx"
 
 import ProtectedRoute from "./ProtectedRoute.jsx"
 
@@ -29,7 +30,7 @@ function App(){
                 <Route element={<ProtectedRoute/>}>
                   <Route path="/salepoint" element={<SalePoint />}></Route>
                   <Route path="/adminpage" element={<AdminPage />}></Route>
-                
+                  <Route path="/graphicspage" element={<PageGraphics />}></Route>
                 </Route>
               </Routes>
             </BrowserRouter>

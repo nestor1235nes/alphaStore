@@ -1,0 +1,34 @@
+.fullContainerGraphicsPage{
+    display: flex;
+    max-width: 100%;
+    height: 100%;
+    
+}
+.headContainerGraphics{
+    display: contents;
+    width: 100%;
+}
+.userLogGraphics{
+    margin-left: -2%;
+    margin-right: 5%;
+    max-width: 40px;
+    max-height: auto;
+    font-size: 2.5rem;
+    
+}
+.userGraphics{
+    display: flex;
+    margin-left: 650%;
+    padding-left: 1%;
+    padding-right: 1%;
+    width: 330%;
+    margin-top: 30%;
+}
+.lineStoreGraphics{
+    margin-top: 10%;
+    max-width: 90%;
+    margin-left: 5%;
+    
+    margin-bottom: 1%;
+    border-top: 2px solid #ec0f0f;
+}

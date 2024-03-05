@@ -23,7 +23,6 @@ export const getSales = async (req, res) => {
         if (!sale) {
             return res.status(404).json({ message: "No hay productos en la colección" });
         }
-        console.log(sale);
         res.json(sale);
     } catch (error) {
         console.error(error);

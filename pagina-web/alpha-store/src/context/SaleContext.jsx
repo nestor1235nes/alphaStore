@@ -31,6 +31,7 @@ export const SaleProvider = ({children}) => {
     
     const getSales = async () =>{
         const res =await getSalesRequest(); 
+        console.log(res.data);
         setSales(res.data);
         return res.data;
 

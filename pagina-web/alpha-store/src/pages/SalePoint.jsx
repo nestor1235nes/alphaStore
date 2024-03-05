@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useStore } from "../context/StoreContext";
 import { useSale } from "../context/SaleContext";
 import { ToastContainer, toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 
 function SalePoint(){
@@ -426,13 +427,18 @@ function SalePoint(){
                         className="product"
                         />
                         Gestionar empleados</Dropdown.Item>
-                    <Dropdown.Item style={{color: 'black', display:'flex'}}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/62/PNG/128/blue_chartstats_until_azu_12519.png"
-                        className="product"
-                        
-                        />
-                        Gráficos</Dropdown.Item>
+                        <Dropdown.Item
+                            as={Link}
+                            to='/graphicspage'
+                            style={{ color: 'black', display: 'flex' }}
+                            >
+                            <img
+                                src="https://cdn.icon-icons.com/icons2/62/PNG/128/blue_chartstats_until_azu_12519.png"
+                                className="product"
+                                alt="Gráficos"
+                            />
+                            Gráficos
+                        </Dropdown.Item>
                 </Dropdown.Menu>
                 </Dropdown>
                 
@@ -472,7 +478,6 @@ function SalePoint(){
                                     </Button>
                                     
                                 </Form>
-                                <ToastContainer />
                             </div>
                             <table className="tableStyle">
                             <thead className="headTableModal">
@@ -506,7 +511,7 @@ function SalePoint(){
                                                     <button style={{width: '30%', height: '25px', borderRadius:'10px', marginLeft:'15%'}} onClick={() => {
                                                         console.log(row.original.resultID)
                                                         deleteProductButtonSubmit(row.original.resultID);
-                                                        <ToastContainer />
+                                                        
                                                     }}>
                                                         
                                                     <img
@@ -573,7 +578,7 @@ function SalePoint(){
                             </Button>
                             
                         </Form>
-                        <ToastContainer />
+                        
                     </Modal.Body>
                 </Modal>
                 <Modal show={showModalEmployee} onHide={handleModalCloseEmployee}>
@@ -754,7 +759,7 @@ function SalePoint(){
                                 </Form>
                             </Modal.Body>
                         </Modal>
-                        <ToastContainer />
+                        
                         <Modal show={showModalSaleSuccesful} onHide={handleModalCloseSaleSuccesful}>
                             <Modal.Header closeButton>
                                 <Modal.Title style={{fontSize:'30px'}} className="modalLeter">¡Gracias por su compra!</Modal.Title>
@@ -774,6 +779,7 @@ function SalePoint(){
                     </div>
                 </div>
             </div>
+            <ToastContainer />
         </div>
     )
 }
