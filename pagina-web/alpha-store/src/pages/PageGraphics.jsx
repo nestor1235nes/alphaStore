@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import React, { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useSale } from "../context/SaleContext";
+import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const PageGraphics = () =>{
 
@@ -27,8 +29,7 @@ const PageGraphics = () =>{
       fetchData();
     }, []);
 
-    
-////////////////////////////////////////////////////////////
+
     const getProductSalesData = (sales) => {
       const productSalesData = {};
       sales.forEach((sale) => {
@@ -43,138 +44,142 @@ const PageGraphics = () =>{
           }
         });
       });
-      return Object.values(productSalesData);
+    
+      const labels = Object.values(productSalesData).map((item) => item.productName);
+      const data = Object.values(productSalesData).map((item) => item.quantity);
+    
+      return { labels, data };
     };
-
-    //////////////////////////////////////////////////////////////////////////
-    //Seccion para mostrar grafico de productos vendidos
-    const productSalesData = getProductSalesData(dataSales);
-
-    const data = {
-      labels: productSalesData.map((product) => product.productName),
-      datasets: [
-        {
-          label: 'Cantidad Vendida',
-          data: productSalesData.map((product) => product.quantity),
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-
-    const options = {
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
-      },
-    };
-
-      //////////////////////////////////////////////////////////////////////////////////////////////
-    //Seccion para mostrar grafico de ventas realizadas por dia
-    const getProductSalesByDay = () => {
+    
+    
+    
+    const getProductSalesByDay = (sales) => {
       const productSalesByDay = {};
-      dataSales.forEach((sale) => {
+      const today = new Date();
+      const lastSevenDays = new Date(today);
+      lastSevenDays.setDate(today.getDate() - 6); // Restar 6 días para obtener los últimos 7 días
+    
+      sales.forEach((sale) => {
         const saleDate = new Date(sale.createdAt);
-        const day = `${saleDate.getFullYear()}-${saleDate.getMonth() + 1}-${saleDate.getDate()}`;
-        if (day in productSalesByDay) {
-          productSalesByDay[day] += sale.products.length;
-        } else {
-          productSalesByDay[day] = sale.products.length;
+        if (saleDate >= lastSevenDays && saleDate <= today) {
+          const day = `${saleDate.getDate()}/${saleDate.getMonth() + 1}`;
+          if (day in productSalesByDay) {
+            productSalesByDay[day] += sale.products.length;
+          } else {
+            productSalesByDay[day] = sale.products.length;
+          }
         }
       });
-      return productSalesByDay;
+    
+      const labels = Object.keys(productSalesByDay);
+      const data = Object.values(productSalesByDay);
+      return {
+        labels,
+        data,
+      };
     };
-    const productSalesByDay = getProductSalesByDay();
-
-    const dataByDay = {
-      labels: Object.keys(productSalesByDay),
-      datasets: [
-        {
-          label: 'Productos Vendidos por Día',
-          data: Object.values(productSalesByDay),
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  
-    const optionsByDay = {
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
-      },
-    };
-
-
-    /////////////////////////////////////////////////////////
-    //seccion para mostra grafico de ventas mensuales
-    const getMonthlySales = () => {
+    
+    const getMonthlySales = (sales) => {
       const monthlySales = {};
-      
-      dataSales.forEach((sale) => {
+      sales.forEach((sale) => {
         const saleDate = new Date(sale.createdAt);
         const month = `${saleDate.getFullYear()}-${saleDate.getMonth() + 1}`;
-        
         if (month in monthlySales) {
           monthlySales[month] += 1; // Assuming each sale is one unit
-          
         } else {
           monthlySales[month] = 1;
         }
       });
-      return monthlySales;
+    
+      const labels = Object.keys(monthlySales);
+      const data = Object.values(monthlySales);
+    
+      return { labels, data };
     };
-  
-    const monthlySales = getMonthlySales();
 
-    const dataMonthlySales = {
-      labels: Object.keys(monthlySales),
-      datasets: [
-        {
-          label: 'Ventas Mensuales',
-          data: Object.values(monthlySales),
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
+    const handleChange = (event) => {
+      setSelectedChart(event.target.value);
     };
-  
-    const optionsMonthlySales = {
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
+    
+    const finalData = (labels, data) => {
+      const dataArray = Array.isArray(data) ? data : [];
+      
+      return {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Cantidad Vendida',
+            data: dataArray.map((item) => item.quantity || item),
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
           },
-        },
-      },
+        ],
+      };
     };
+    
+    
+    
+    // Obtener los datos de acuerdo al tipo de gráfico seleccionado
+    const [selectedChart, setSelectedChart] = useState('productSales'); // Seleccionar 'productSales' por defecto al cargar la página
+    const [chartData, setChartData] = useState(null);
+    
+
+    useEffect(() => {
+      let labels, data;
+      switch (selectedChart) {
+        case 'productSales':
+          const proSalesdate = getProductSalesData(dataSales);
+          labels = proSalesdate.labels;
+          data = proSalesdate.data;
+          break;
+        case 'productSalesByDay':
+          const salesByDayData = getProductSalesByDay(dataSales);
+          labels = salesByDayData.labels;
+          data = salesByDayData.data;
+          break;
+        case 'monthlySales':
+          const salesByMonthData = getMonthlySales(dataSales);
+          labels = salesByMonthData.labels;
+          data = salesByMonthData.data;
+          break;
+        default:
+          labels = () => '';
+          data = [];
+      }
+    
+      const chartData = finalData(labels, data);
+      console.log(chartData)
+      setChartData(chartData);
+    }, [dataSales, selectedChart]);
+    
+      
+    // Convertir data a un array si es un objeto
+    
 
     return(
         <div className="fullContainerGraphicsPage">
                       
                
            <div className="headContainerGraphics">
-                <div>
+                <div style={{ marginLeft:'5%'}}>
                     <img
                             src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FImagen%20varias&files=Avatar_upscayl_4x_realesrgan-x4plus.png"
                             alt="Logo"
                             className="logo-home"
                         />         
-                    <h1 className="estandarLetter" style={{marginLeft:'55%'}}>Alpha<strong >Store</strong></h1>    
+                    <h1 className="estandarLetter" style={{marginLeft:'15%'}}>Alpha<strong >Store</strong></h1>    
                 </div> 
-                
+                <div style={{marginLeft:'28%', marginTop:'1%', width:'0px'}}>
+                  <button className="buttonBack">
+                  <img
+                      src="https://cdn.icon-icons.com/icons2/1134/PNG/512/1486348819-back-backwards-repeat-arrows-arrow-blue_80473.png"
+                      alt="goBack"
+                      style={{maxWidth:'30%', marginTop:'1%', marginLeft:'5%'}}
+                  /> 
+                    <Link to= "/salepoint" style={{marginTop:'3%',marginLeft:'5%', color:'white', fontSize:'1rem'}} className="estandarLetter">Volver</Link> 
+                  </button>
+                </div>
                <Dropdown>
                <Dropdown.Toggle variant="light" id="dropdown-basic" className="userGraphics" style={{overflow:'hidden', whiteSpace:'nowrap'}}>
                <img
@@ -193,21 +198,43 @@ const PageGraphics = () =>{
                </Dropdown.Menu>
                </Dropdown>        
            </div>
+           
+            <hr className="lineStoreGraphics"></hr>
 
-           <hr className="lineStoreGraphics"></hr>
-           <div style={{width:'70%',marginTop:'7%',marginLeft:'-50%'}}>
-              <h2>Cantidad de productos Vendidos</h2>
-              <Bar data={data} options={options} />
-              <h2>Productos Vendidos por Día</h2>
-              <Bar data={dataByDay} options={optionsByDay} />
-              <h2>Ventas Mensuales</h2>
-              <Bar style={{width:'100%'}} data={dataMonthlySales} options={optionsMonthlySales} />
+            <div style={{display:'flex'}}>
+              <div style={{ width: '70%', marginTop: '3%', marginLeft: '5%' }}>
+                
+
+                {chartData ? (
+                  <div>
+                    <h2>{selectedChart}</h2>
+                    <Bar data={chartData} />
+                  </div>
+                ) : (
+                  <div>Loading...</div>
+                )}
+              </div>
+              <div className="multiSelect" >
+                <Box sx={{ minWidth: 120 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Select Chart</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={selectedChart}
+                        label="Select Chart"
+                        onChange={handleChange}
+                      >
+                        <MenuItem value={'productSales'}>Ventas Totales de cada producto</MenuItem>
+                        <MenuItem value={'productSalesByDay'}>Ventas totales ultimos 7 dias</MenuItem>
+                        <MenuItem value={'monthlySales'}>Ventas totales de cada mes</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+              </div>
                 
            </div>
-           <div style={{width:'70%',marginTop:'7%',marginLeft:'-50%'}}>
-              
-                
-           </div>
+          
         </div>
 
 

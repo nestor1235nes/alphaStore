@@ -147,7 +147,8 @@ function HomePage () {
                         En <strong>AlphaStore</strong> potenciarás al máximo tu negocio,
                         podrás ver gráficamente tus ganancias, tendrás un conteo y registro de cada producto que tengas y más!
                     </p>
-                    <h1 className="referencial">Imagen Referencial <img
+                    <h1 className="referencial">Imagen Referencial 
+                    <img
                     src="https://cdn-icons-png.flaticon.com/512/12071/12071354.png"
                     className="right-image"
                 /></h1>

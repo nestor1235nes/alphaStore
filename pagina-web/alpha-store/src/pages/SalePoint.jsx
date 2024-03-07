@@ -63,7 +63,7 @@ function SalePoint(){
                     return newData;
                 });
             } else {
-                console.log("producto no existente");
+                
                 // El producto no está en el carrito, agregarlo con cantidad 1
                 setDatashoppingCar(prevData => [...prevData, newProduct]);
             }
@@ -300,7 +300,7 @@ function SalePoint(){
           };
 
         const result = await signup(addEmployee);
-        console.log(result);
+        
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -316,7 +316,7 @@ function SalePoint(){
 
     const calculatedTurned = (paid, totalp) => {
         const result = paid - totalp;
-        console.log(result);
+        
     
         if (result >= 0) { // Utilizamos result en lugar de turned para verificar si alcanza
             setTurned(result);
@@ -509,7 +509,7 @@ function SalePoint(){
                                             <td className="celdasTableModal">
                                                 <div className="lastColumn">
                                                     <button style={{width: '30%', height: '25px', borderRadius:'10px', marginLeft:'15%'}} onClick={() => {
-                                                        console.log(row.original.resultID)
+                                                        
                                                         deleteProductButtonSubmit(row.original.resultID);
                                                         
                                                     }}>
@@ -681,7 +681,7 @@ function SalePoint(){
                                         <td >
                                             <div className="lastColumn">
                                                 <button style={{ width: '50%', height: '25px', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
-                                                    console.log(row.original.resultID);
+                                                    
                                                     deleteProductShoppingCarButtonSubmit(row.original.resultID);
                                                 }}>
                                                     <img
