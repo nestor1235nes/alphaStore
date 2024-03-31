@@ -3,6 +3,7 @@ import './RegisPage.css';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logoImage from "../components/logo.jpg";
 
 const RegisPage = () => {
   const { register, handleSubmit, formState: {errors}, } = useForm();
@@ -24,7 +25,7 @@ const RegisPage = () => {
       <div className="registration-container">
         <div className='logo-container'>
             <img
-                src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FImagen%20varias&files=Avatar_upscayl_4x_realesrgan-x4plus.png"
+                src={logoImage}
                 alt="Logo"
                 className="logo"
             />

@@ -142,7 +142,7 @@
     margin:1%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     margin-right: 2%;
-    
+    padding: 3%;
     transition: transform 0.1s ease;
 }
 .card-image-service {
@@ -303,6 +303,7 @@ button:hover{
     
 }
 
+
 .alphastore-parrafo{
     
     padding-top: 3% ;
@@ -319,16 +320,18 @@ button:hover{
     margin-left: 5%;
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-
+    transition: transform 0.1s ease;
 }
+
 .alphastore-image{
     max-width: 50%;
+    transition: transform 0.1s ease;
 }
 .alphastore-image:hover{
     transform: scale(1.15);
 }
 .alphastore-card:hover{
-    transform: scale(1.05);
+    transform: scale(1.10);
 }
 .referencial{
     margin-top: 3%;
@@ -375,9 +378,8 @@ button:hover{
     width: 25%;
     height: 40px;
     margin-top: 5%;
-    
+    color: #ffffff;
     margin-left: 38%;
-    color: rgb(255, 0, 0);
     font-weight: bold;
     
     /* Añade bordes */

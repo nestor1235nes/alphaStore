@@ -43,7 +43,7 @@ button:hover{
     margin-bottom: 20%;
     color: white;
     font-weight: bold;
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     
     /* Añade bordes */
     border: 1px solid #2c3e4d;
@@ -52,7 +52,7 @@ button:hover{
 
 .logo {
     position: absolute;
-    top: 5%;
+    top: 3%;
     left: 5%;
     max-width: 20%;
     max-height: 20%;
@@ -71,8 +71,9 @@ button:hover{
 .tittle {
     font-weight: bold;
     font-size: 2rem; /* 200% */
-    font-family: "Times New Roman", Times, serif;
-    margin-top: 5%;
+    font-family: 'Roboto';
+    margin-top: 7%;
+    margin-left:7%;
     color: #212338;
 }
 
@@ -81,7 +82,7 @@ button:hover{
     color: #212338;
    
     font-weight: bold;
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     margin: 1%;
 }
 
@@ -94,7 +95,7 @@ button:hover{
     padding: 8px;
     margin-bottom: 10px;
     border: 1px solid #344a57;
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     border-radius: 3px;
     text-align: center;
     font-size: 1.2rem;
@@ -103,14 +104,14 @@ button:hover{
     outline: none;
     border-color: #344a57;
     box-shadow: 0 0 5px rgba(52,74,87);
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     text-align: center;
 }
 
 .already {
     background-color: rgb(243, 114, 114);
     
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     text-align: center;
     
     font-size: 1.1rem;
@@ -121,14 +122,14 @@ button:hover{
 .contactF{
     margin-top: -20%;
     margin-bottom: 10%;
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     text-align: center;
     font-weight: bold;
 }
 
 .contact{
     color: rgb(71, 71, 155);
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Roboto';
     text-align: center;
     
 }

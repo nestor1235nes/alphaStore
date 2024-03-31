@@ -2,7 +2,7 @@ import React from "react";
 import './SalePoint.css';
 import { useForm } from 'react-hook-form';
 import {useReactTable, getCoreRowModel, flexRender} from '@tanstack/react-table';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Modal , Dropdown, Form, Button } from 'react-bootstrap';
 import { useAuth } from "../context/AuthContext";
 import { useStore } from "../context/StoreContext";
@@ -10,11 +10,15 @@ import { useSale } from "../context/SaleContext";
 import { ToastContainer, toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
+import logoImage from "../components/logo.jpg";
+
 
 function SalePoint(){
 
     const {register, handleSubmit} = useForm();
     const { signout, user } = useAuth();
+
+    const [totalSalesAmount, setTotalSalesAmount] = useState('');
 
     const [showModalEmployee, setShowModalEmployee] = useState(false);
     const handleModalShowEmployee = () => setShowModalEmployee(true);
@@ -22,12 +26,92 @@ function SalePoint(){
 
     const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
 
+
+    
+
+
+
     //////////////////////////////////////////////////////////////////////////
     //Añadiendo o eliminando productos al carro de compras
-    const [dataShoppingCar, setDatashoppingCar] = useState([]);
-    const onSubmit = handleSubmit(async (data) => {
-        const result = await getProduct(data);
     
+    const [dataShoppingCar, setDatashoppingCar] = useState([]);
+    const [barcode , setBarcode ] =useState('');
+    
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleBarcodeScan);
+        return () => {
+            window.removeEventListener('keydown', handleBarcodeScan);
+        };
+    }, []);
+    
+    let tempBarcode = '';
+    
+    const handleBarcodeScan = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            
+            onSubmit({ producto: tempBarcode });
+            tempBarcode = ''; // Reinicia tempBarcode después de enviar
+        } else {
+            tempBarcode += e.key;
+        }
+    };
+    const [auxStorage, setAuxStorage] = useState([]); 
+    const updateProductStorage = async () => {
+        const sale = {
+            products: dataShoppingCar.map(product => ({
+                productName: product.resultProductName,
+                productCode: product.resultProductCode,
+                saleAmount: product.cont.toString(),
+                priceProvider: product.resultPriceProvider,
+                salePrice: product.resultSalePrice,
+                saleTotal: totalPrice.toString(),
+            })),
+        };
+    
+        // Recorrer cada producto vendido en 'sale'
+        sale.products.forEach(soldProduct => {
+            // Buscar el producto correspondiente en 'auxStorage'
+            const productInStorage = auxStorage.find(product => product.resultProductCode === soldProduct.productCode);
+            
+            if (productInStorage) {
+                // Restar la cantidad vendida de la cantidad en 'auxStorage'
+                productInStorage.resultProductAmount -= parseInt(soldProduct.saleAmount);
+                
+            }
+        });
+    
+        // Actualizar el estado 'auxStorage' con los productos actualizados
+        setAuxStorage([...auxStorage]);
+        
+
+        auxStorage.forEach(async (product) => {
+            
+            const productName = product.resultProductName;
+            const productCode = product.resultProductCode;
+            const productAmount = product.resultProductAmount.toString();
+            const priceProvider = product.resultPriceProvider;
+            const salePrice = product.resultSalePrice;
+
+            const editProduct = {
+                productName,
+                productCode,
+                productAmount,
+                priceProvider,
+                salePrice,
+            };
+            
+            await deleteProduct(product.resultID);
+            const result = await createProduct(editProduct);
+            
+        });
+        
+    };
+    
+    const onSubmit = async (data) => {
+        const result = await getProduct(data);
+        
         const newProduct = {
             resultProductAmount: result.productAmount,
             resultProductName: result.productName,
@@ -36,45 +120,73 @@ function SalePoint(){
             resultPriceProvider: result.priceProvider,
             resultProductCode: result.productCode,
             cont: 1,
-
         };
-    
         
-        if (dataShoppingCar.length === 0) {
-        // El carrito está vacío, agregar el producto con cantidad 1
-            setDatashoppingCar([newProduct]);
+
+        const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
+    
+        if (existingProductIndex !== -1) {
+            // Si el producto ya está en el carrito, incrementa su contador
+            const updatedShoppingCar = [...dataShoppingCar];
+            updatedShoppingCar[existingProductIndex].cont++;
+            setDatashoppingCar(updatedShoppingCar);
         } else {
-            // El carrito no está vacío, verificar si el producto ya está en el carrito
-            const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
-
-            if (existingProductIndex !== -1) {
-                // El producto ya está en el carrito, aumentar la cantidad en 1
-                setDatashoppingCar(prevData => {
-                    const newData = prevData.map(item => {
-                        if (item.resultID === newProduct.resultID) {
-                            // Actualizar la cantidad del producto existente
-                            return {
-                                ...item,
-                                cont: item.cont + 1
-                            };
-                        }
-                        return item;
-                    });
-                    return newData;
-                });
-            } else {
-                
-                // El producto no está en el carrito, agregarlo con cantidad 1
-                setDatashoppingCar(prevData => [...prevData, newProduct]);
-            }
+            // Si el producto no está en el carrito, agrégalo
+            setAuxStorage(prevData => {
+                // Resto del código para agregar un nuevo producto
+                return [...prevData, newProduct];
+              });
+            setDatashoppingCar(prevData => {
+                // Resto del código para agregar un nuevo producto
+                return [...prevData, newProduct];
+              });
         }
- 
-    });
+    };
+    const onSubmitLess = async (data) => {
+        
+        const result = await getProduct(data);
+        const newProduct = {
+            resultProductAmount: result.productAmount,
+            resultProductName: result.productName,
+            resultSalePrice: result.salePrice,
+            resultID: result._id,
+            resultPriceProvider: result.priceProvider,
+            resultProductCode: result.productCode,
+            cont: 1,
+        };
+        
 
+        const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
+        if (existingProductIndex !== -1) {
+            // Si el producto ya está en el carrito, decrementa su contador
+            const updatedShoppingCar = [...dataShoppingCar];
+            updatedShoppingCar[existingProductIndex].cont--;
+            
+            if (updatedShoppingCar[existingProductIndex].cont === 0) {
+                deleteProductShoppingCarButtonSubmit(newProduct.resultID);
+            }else{
+                setDatashoppingCar(updatedShoppingCar);
+            }
+        
+            
+        } else {
+            // Si el producto no está en el carrito, agrégalo
+            setDatashoppingCar(prevData => {
+                // Resto del código para agregar un nuevo producto
+                return [...prevData, newProduct];
+            });
+        }
+    };
+
+    useEffect(() => {
+        
+      }, [dataShoppingCar]);
+      
     const deleteProductShoppingCarButtonSubmit = (productID) => {
         // Buscar el índice del producto en el array
+        console.log(productID)
         const index = dataShoppingCar.findIndex(product => product.resultID === productID);
-        
+        console.log(index)
         if (index !== -1) {
             // Eliminar el producto del array
             const updatedShoppingCar = [...dataShoppingCar];
@@ -106,6 +218,10 @@ function SalePoint(){
         columns: columnsShoppingCar,
         getCoreRowModel: getCoreRowModel(),
     });
+    //////////////////////////////////////////////////////////////////////////////////
+    //Guardar lo que captura el lector
+    
+      
 
     //////////////////////////////////////////////////////////////////////////
     //Modal para agregar, editar o eliminar algun producto del almacen
@@ -187,7 +303,8 @@ function SalePoint(){
         toast.success('Producto eliminado');
         }
     };
-
+   
+    
     const addProductSubmit = async (event) => {
         event.preventDefault();
         const productName = event.target.productName.value;
@@ -205,6 +322,7 @@ function SalePoint(){
           };
 
         const result = await createProduct(addProductData);
+        
         const updatedProducts = await getProducts();
         const modalProductData = updatedProducts.map(product => {
             const resultProductAmount = product.productAmount;
@@ -276,6 +394,8 @@ function SalePoint(){
 //////////////////////////////////////////////////////////////////////////
     //Funcion para cerrar sesion
     const logOutSubmit = async () => {
+        localStorage.removeItem('totalSalesAmount'); // Eliminar totalSalesAmount de localStorage
+        setTotalSalesAmount('');
         const result = await signout();
     };
 
@@ -320,6 +440,7 @@ function SalePoint(){
     
         if (result >= 0) { // Utilizamos result en lugar de turned para verificar si alcanza
             setTurned(result);
+            updateProductStorage();
             confirmSale();
         } else {
             toast.error("Dinero inferior al monto total del carrito");
@@ -366,10 +487,12 @@ function SalePoint(){
 
         try {
             const resultSale = await createSale(sale);
+
             toast.success('Venta realizada');
             handleModalClosePayCash();
             handleModalShowSaleSuccesful();
             setDatashoppingCar([]);
+            setAuxStorage([]);
         } catch (error) {
             console.error(`Error creating sale: ${error.message}`);
         }
@@ -393,11 +516,65 @@ function SalePoint(){
         };
     }, [showModalSaleSuccesful]);
 
+    ////////////////////////////////////////////////////////////////////////
+    //Modal para obtener monto inicial de la caja
+
+    const [showModalInit, setShowModalInit] = useState(false);
+    const [startingAmount, setStartingAmount] = useState('');
+    useEffect(() => {
+        setShowModalInit(true);
+      }, []);
+      useEffect(() => {
+        const totalSalesAmountFromStorage = localStorage.getItem('totalSalesAmount');
+        if (totalSalesAmountFromStorage) {
+          setTotalSalesAmount(totalSalesAmountFromStorage);
+          
+        }
+      }, []);
+    
+      const saveModalStartingAmount = (e) => {
+        e.preventDefault();
+        setTotalSalesAmount(startingAmount);
+        localStorage.setItem('totalSalesAmount', startingAmount); // Guardar en localStorage
+        setShowModalInit(false);
+      }
+
     return(
         <div className="bigContainer">
-           
+           <Modal show={totalSalesAmount  === ''} onHide={() => {}}>
+            <Modal.Header closeButton>
+                <Modal.Title className="estandarLetter">Monto inicial de la caja</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form style={{textAlign:'center'}}>
+                <Form.Group controlId="payCash">
+                    <Form.Control
+                    className="modalLeter"
+                    style={{textAlign:'center'}}
+                    type="text"
+                    placeholder="Ingresa monto inicial"
+                    name="startingAmount"
+                    value={startingAmount}
+                    onChange={(e) => setStartingAmount(e.target.value)}
+                    required
+                    />
+                </Form.Group>
+
+                <Button
+                    className="estandarLetter"
+                    variant="primary"
+                    type="button" // Cambia el tipo de submit a button para evitar la recarga de la página
+                    onClick={(e) => saveModalStartingAmount(e)} // Pasa el evento a la función
+                    style={{marginTop:'10%', backgroundColor:'#344a57'}}
+                >
+                    Guardar
+                </Button>
+                </Form>
+            </Modal.Body>
+            </Modal>
+            
             <img
-                    src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FImagen%20varias&files=Avatar_upscayl_4x_realesrgan-x4plus.png"
+                    src={logoImage}
                     alt="Logo"
                     className="logo-home"
                 />
@@ -405,44 +582,7 @@ function SalePoint(){
             <div className="headContainer">
 
                 
-                <h1>Alpha<strong >Store</strong></h1>
-                <Dropdown>
-                <Dropdown.Toggle variant="light" id="dropdown-basic" style={{width:'80%', marginTop:'15%'}}>
-                    <img
-                    src="https://cdn.icon-icons.com/icons2/1090/PNG/512/settings_78352.png"
-                    className="Configurate"
-                    />
-                </Dropdown.Toggle>
-
-                <Dropdown.Menu style={{  backgroundColor: 'white', fontSize: '1.3rem', width:'230px'}}>
-                    <Dropdown.Item onClick={handleOpenModalAndFetchData} style={{color: 'black', borderBottom: '1px solid #212338', display:'flex'}}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/3653/PNG/512/market_shop_ecommerce_delivery_product_icon_228243.png"
-                        className="product"
-                        />
-                        Gestionar productos</Dropdown.Item>
-                    <Dropdown.Item onClick={() => { handleModalShowEmployee(); }} style={{color: 'black', borderBottom: '1px solid #212338', paddingTop:'3%', paddingBottom:'3%', display:'flex'}}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/2744/PNG/512/employee_person_business_teamwork_businessman_icon_175923.png"
-                        className="product"
-                        />
-                        Gestionar empleados</Dropdown.Item>
-                        <Dropdown.Item
-                            as={Link}
-                            to='/graphicspage'
-                            style={{ color: 'black', display: 'flex' }}
-                            >
-                            <img
-                                src="https://cdn.icon-icons.com/icons2/62/PNG/128/blue_chartstats_until_azu_12519.png"
-                                className="product"
-                                alt="Gráficos"
-                            />
-                            Gráficos
-                        </Dropdown.Item>
-                </Dropdown.Menu>
-                </Dropdown>
-                
-                
+                <h1>Alpha<strong >Store</strong></h1>         
                 <Modal show={showModalProduct} onHide={handleModalCloseProduct} size='xl'>
                     <Modal.Header closeButton>
                     <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Gestiona tus productos</Modal.Title>
@@ -618,11 +758,35 @@ function SalePoint(){
                 />
                 <h1 className="user-name">{user.username}</h1>
                 </Dropdown.Toggle>
-                <Dropdown.Menu style={{  backgroundColor: 'white', fontSize: '1.3rem', width:'230px', marginLeft:'50%'}}>
+                <Dropdown.Menu style={{  backgroundColor: 'white', fontSize: '1.3rem', width:'270px', borderColor:'#9b9b9b'}}>
+                <Dropdown.Item onClick={handleOpenModalAndFetchData} style={{color: 'black', borderBottom: '1px solid #9b9b9b', display:'flex'}}>
+                        <img
+                        src="https://cdn.icon-icons.com/icons2/3653/PNG/512/market_shop_ecommerce_delivery_product_icon_228243.png"
+                        className="product"
+                        />
+                        Gestionar productos</Dropdown.Item>
+                    <Dropdown.Item onClick={() => { handleModalShowEmployee(); }} style={{color: 'black', borderBottom: '1px solid #9b9b9b', paddingTop:'3%', paddingBottom:'3%', display:'flex'}}>
+                        <img
+                        src="https://cdn.icon-icons.com/icons2/1572/PNG/512/3592855-business-man-employee-general-human-member-office-tie_107745.png"
+                        className="product"
+                        />
+                        Gestionar empleados</Dropdown.Item>
+                        <Dropdown.Item
+                            as={Link}
+                            to='/graphicspage'
+                            style={{ color: 'black', display: 'flex', borderBottom: '1px solid #9b9b9b', }}
+                            >
+                            <img
+                                src="https://cdn.icon-icons.com/icons2/963/PNG/512/1477521928_10_icon-icons.com_74620.png"
+                                className="product"
+                                alt="Gráficos"
+                            />
+                            Gráficos
+                        </Dropdown.Item>
                     <Dropdown.Item style={{color: 'black', display:'flex'}} onClick={logOutSubmit}>
                         <img
-                        src="https://cdn.icon-icons.com/icons2/1207/PNG/512/1491313938-close_82982.png"
-                        className="buttonClose"
+                        src="https://cdn.icon-icons.com/icons2/1097/PNG/512/1485477034-close2_78601.png"
+                        className="product"
                         />
                         Cerrar Sesión</Dropdown.Item>
                 </Dropdown.Menu>
@@ -633,17 +797,26 @@ function SalePoint(){
 
             <hr className="lineStore"></hr>
             <div className="options-head">
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', alignItems: 'center' }}>
-                <input
-                    className="findInput"
-                    placeholder="Código de barras del producto"
-                    {...register("producto")} // Registra el input con el nombre "producto"
-                    required
-                ></input>
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault(); // Evitar que el formulario se envíe automáticamente
+                    onSubmit({ producto: barcode });
+                    setBarcode('');
+                }}
+                style={{ display: 'flex', alignItems: 'center' }}
+            >
+            <input
+                className="findInput"
+                placeholder="Código de barras del producto"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                required
+            ></input>
+                
                 <button className="findButton">Agregar al carrito</button>
             </form>
-                
-                <button className="closeBox">Cerrar Caja</button>
+            
+            <button className="closeBox">Cerrar Caja</button>
                 
             </div>
 
@@ -651,15 +824,24 @@ function SalePoint(){
                 <div className="trolleyContainer">
                     {shoppingCar.getRowModel().rows.length === 0 ? (
                         <div>
-                            <img
-                                src="https://cdn.icon-icons.com/icons2/727/PNG/512/si-duo-trolley-down_icon-icons.com_62691.png"
-                                alt="shoppingCar"
-                                style={{ opacity: '30%', marginTop:'20%', marginLeft:'20%' }}
-                            />
+                            <div style={{display:'flex'}}>
+                                <img
+                                    src="https://cdn.icon-icons.com/icons2/2958/PNG/512/shopping_cart_caddy_ecommerce_store_icon_185958.png"
+                                    alt="shoppingCar"
+                                    style={{ opacity: '50%', marginTop:'4%', marginLeft:'20%' }}
+                                />
+                                <img
+                                    src="https://cdn.icon-icons.com/icons2/3571/PNG/512/navigation_download_down_arrow_icon_225550.png"
+                                    alt="shoppingCar"
+                                    style={{ width:'20%', maxHeight:'90px', opacity: '70%', marginTop:'10%', marginLeft:'-30%' }}
+                                />
+                            </div>
+                            
                         </div>
+                        
                     ) : (
                         <table className="shoppingTableStyle">
-                            <thead className="headTableShoppingCar">
+                            <thead className="headTableShoppingCar" >
                                 {shoppingCar.getHeaderGroups().map((headerGroup, i) => (
                                     <tr key={i}>
                                         {headerGroup.headers.map((headers, i) => (
@@ -680,13 +862,32 @@ function SalePoint(){
                                         ))}
                                         <td >
                                             <div className="lastColumn">
-                                                <button style={{ width: '50%', height: '25px', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
+                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
+                                                    
+                                                    onSubmit({ producto: row.original.resultProductCode});
+                                        
+                                                }}>
+                                                    <img
+                                                        src="https://cdn.icon-icons.com/icons2/2854/PNG/512/add_plus_interface_icon_181584.png"
+                                                        style={{ borderRadius: '5px' }}
+                                                    />
+                                                </button>
+                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '2%' }} onClick={() => {
                                                     
                                                     deleteProductShoppingCarButtonSubmit(row.original.resultID);
                                                 }}>
                                                     <img
                                                         src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
                                                         alt="Eliminar"
+                                                        style={{ borderRadius: '5px' }}
+                                                    />
+                                                </button>
+                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '2%' }} onClick={() => {
+                                                    
+                                                    onSubmitLess({ producto: row.original.resultProductCode});
+                                                }}>
+                                                    <img
+                                                        src="https://cdn.icon-icons.com/icons2/2854/PNG/512/delete_remove_minus_icon_181585.png"
                                                         style={{ borderRadius: '5px' }}
                                                     />
                                                 </button>
@@ -712,10 +913,10 @@ function SalePoint(){
                     <div className="payButtonContainer">
                         <button className="payButton" onClick={openModalPaid}>
                             <img
-                                src="https://cdn.icon-icons.com/icons2/2427/PNG/512/cash_icon_147027.png"
+                                src="https://cdn.icon-icons.com/icons2/3989/PNG/512/cash_currency_finance_money_dollar_icon_253833.png"
                                 className="cashImage"
                             />
-                            <span>Pago con efectivo</span>
+                            <span className="textButton">Pago con efectivo</span>
                         </button>
                         <Modal show={showModalPayCash} onHide={handleModalClosePayCash}>
                             <Modal.Header closeButton>
@@ -771,7 +972,7 @@ function SalePoint(){
                         </Modal>
                         <button className="payButton">
                             <img
-                                src="https://cdn.icon-icons.com/icons2/2104/PNG/512/credit_card_icon_129105.png"
+                                src="https://cdn.icon-icons.com/icons2/3967/PNG/512/cash_finance_money_card_debit_payment_credit_icon_251663.png"
                                 className="cardImage"
                             />
                             <span>Pago con tarjeta</span>

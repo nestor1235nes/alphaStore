@@ -6,6 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import { useSale } from "../context/SaleContext";
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { Link } from 'react-router-dom';
+import logoImage from "../components/logo.jpg";
 
 const PageGraphics = () =>{
 
@@ -164,7 +165,7 @@ const PageGraphics = () =>{
            <div className="headContainerGraphics">
                 <div style={{ marginLeft:'5%'}}>
                     <img
-                            src="https://cloud.alphanetcurico.com/s/WgTq9kGcCfCceYs/download?path=%2FImagen%20varias&files=Avatar_upscayl_4x_realesrgan-x4plus.png"
+                            src={logoImage}
                             alt="Logo"
                             className="logo-home"
                         />         

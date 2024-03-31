@@ -18,8 +18,9 @@ export const StoreProvider = ({children}) => {
     const [data, setData] = useState([]);
 
     const createProduct = async (product) =>{
+
         const res = await createProductRequest(product);
-        console.log(res)
+        
     }
     const getProducts = async () =>{
         const res =await getProductsRequest(); 
@@ -29,6 +30,7 @@ export const StoreProvider = ({children}) => {
     }
     const getProduct = async (productCode) => {
         const res = await getProductRequest(productCode.producto);
+
         setProducts(res.data);
         return res.data;
 

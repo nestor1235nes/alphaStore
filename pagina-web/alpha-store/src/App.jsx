@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import PageLogin from "./pages/PageLogin.jsx"
 import RegisPage from "./pages/RegisPage.jsx"
-import HomePage from "./pages/HomePage.jsx"
+import Home from "./pages/Home.jsx"
 import { AuthProvider } from "./context/AuthContext.jsx"
 import SalePoint from "./pages/SalePoint.jsx"
 import AdminPage from "./pages/AdminPage.jsx"
@@ -22,7 +22,7 @@ function App(){
           <SaleProvider>
             <BrowserRouter>
               <Routes>
-              <Route path="/" element={<HomePage />}></Route>
+                <Route path="/" element={<Home />}></Route>
                 <Route path="/login" element={<PageLogin />}></Route>
                 <Route path="/register" element={<RegisPage />}></Route>
 
