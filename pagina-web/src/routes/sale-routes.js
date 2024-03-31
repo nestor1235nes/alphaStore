@@ -6,8 +6,8 @@ import { saleSchema } from '../schemas/sale-scheme.js';
 
 const router = Router()
 
-router.get('/sale', authRequired, getSale)
-router.get('/sale/:id', authRequired, getSales)
+router.get('/sale', authRequired, getSales)
+router.get('/sale/:id', authRequired, getSale)
 router.post('/sale', authRequired, validateSchema(saleSchema),addSale)
 router.delete('/sale/:id', authRequired, deleteSale)
 
