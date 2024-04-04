@@ -26,11 +26,6 @@ function SalePoint(){
 
     const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
 
-
-    
-
-
-
     //////////////////////////////////////////////////////////////////////////
     //Añadiendo o eliminando productos al carro de compras
     
@@ -77,8 +72,13 @@ function SalePoint(){
             
             if (productInStorage) {
                 // Restar la cantidad vendida de la cantidad en 'auxStorage'
+                const resta = productInStorage.resultProductAmount - parseInt(soldProduct.saleAmount);
+                if (resta <= 15 && resta % 5 === 0) {
+                    toast.info(`¿Alerta! Quedan ${resta} unidades del producto: ${productInStorage.resultProductName}`, {
+                        autoClose: 7000 // Duración en milisegundos (5 segundos en este caso)
+                    });
+                }
                 productInStorage.resultProductAmount -= parseInt(soldProduct.saleAmount);
-                
             }
         });
     
@@ -539,6 +539,34 @@ function SalePoint(){
         setShowModalInit(false);
       }
 
+
+      ////////////////////////////////////////////////////////////////////////////////////
+      //Seccion de ordenamiento de la tabla del modal
+
+      const [sortKey, setSortKey] = useState('');
+      const [sortDirection, setSortDirection] = useState('asc');
+      
+      // Función para ordenar los productos
+      const sortProducts = (key) => {
+        
+        const direction = key === sortKey ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
+        const sortedProducts = [...dataModalProduct].sort((a, b) => {
+            if (key === 'resultProductName') {
+                return direction === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+            } else if (key === 'resultProductAmount' || key === 'resultSalePrice') {
+                const valA = parseFloat(a[key]);
+                const valB = parseFloat(b[key]);
+                const result = direction === 'asc' ? valA - valB : valB - valA;
+                return result;
+            }
+            return 0;
+        });
+    
+        setDataModalProduct(sortedProducts);
+        setSortKey(key); // Actualiza la clave de ordenación
+        setSortDirection(direction);
+    };
+
     return(
         <div className="bigContainer">
            <Modal show={totalSalesAmount  === ''} onHide={() => {}}>
@@ -613,72 +641,67 @@ function SalePoint(){
                                     <Form.Control className="modalLeter" style={{textAlign:'center'}} type="number" name="salePrice" required />
                                     </Form.Group>
 
-                                    <Button variant="primary" type="submit" style={{marginTop:'10%', backgroundColor:'#344a57', maxWidth:'60% ', marginLeft: '20%'}} >
+                                    <Button variant="primary" type="submit" style={{marginTop:'10%', backgroundColor:'#344a57', maxWidth:'70% ', marginLeft: '16%'}} >
                                     Agregar producto
                                     </Button>
                                     
                                 </Form>
                             </div>
-                            <table className="tableStyle">
-                            <thead className="headTableModal">
-                                {
-                                    tableAddEditDeleteProduct.getHeaderGroups().map((headerGroup, j) =>(
-                                        <tr key={j} >
-                                            {
-                                                headerGroup.headers.map((headers, j) =>(
-                                                    <th key={j}>
-                                                        {headers.column.columnDef.header}
-
-                                                    </th>
-                                                ))
-                                            }
-                                            
-                                        </tr>
-                                    ))
-                                }
-                            </thead>
-                            <tbody>
-                                {
-                                    tableAddEditDeleteProduct.getRowModel().rows.map((row, j) =>(
-                                        <tr key={j} >
-                                            {row.getVisibleCells().map((cell,j) =>(
-                                                <td key={j} className="celdasTableModal">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            <div style={{width:'100%' ,height: '530px', overflowY: 'auto', overflowX: 'hidden'}}>
+                                <table className="tableStyle">
+                                
+                                <thead className="headTableModal">
+                                    <tr>
+                                        
+                                        <th onClick={() => sortProducts('resultProductAmount')}>Cantidad</th>
+                                        <th onClick={() => sortProducts('resultProductName')}>Nombre</th>
+                                        <th onClick={() => sortProducts('resultSalePrice')}>Precio Venta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        tableAddEditDeleteProduct.getRowModel().rows.map((row, j) =>(
+                                            <tr key={j} >
+                                                {row.getVisibleCells().map((cell,j) =>(
+                                                    <td key={j} className="celdasTableModal">
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </td>
+                                                ))}
+                                                <td className="celdasTableModal">
+                                                    <div style={{backgroundColor:'white', border: '1px solid white'}} >
+                                                        <button style={{width: '25%', height: '25px', borderRadius:'10px', marginLeft:'-30%'}} onClick={() => {
+                                                            
+                                                            deleteProductButtonSubmit(row.original.resultID);
+                                                            
+                                                        }}>
+                                                            
+                                                        <img
+                                                            src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
+                                                            alt="Imagen"
+                                                            style={{borderRadius: '5px'}}
+                                                        />
+                                                        
+                                                        </button>
+                                                        <button style={{width: '25%', height: '25px', borderRadius:'5px', marginLeft:'10%'}} className="hov" onClick={() =>{
+                                                            editProductButtonImageSubmit(row.original);
+                                                            handleModalShowEdit();
+                                                            
+                                                        }}>
+                                                        <img
+                                                            src="https://cdn.icon-icons.com/icons2/1786/PNG/128/file-edit_114433.png"
+                                                            
+                                                            
+                                                        />
+                                                        </button>
+                                                    </div>
                                                 </td>
-                                            ))}
-                                            <td className="celdasTableModal">
-                                                <div className="lastColumn">
-                                                    <button style={{width: '30%', height: '25px', borderRadius:'10px', marginLeft:'15%'}} onClick={() => {
-                                                        
-                                                        deleteProductButtonSubmit(row.original.resultID);
-                                                        
-                                                    }}>
-                                                        
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
-                                                        alt="Imagen"
-                                                        style={{borderRadius: '5px'}}
-                                                    />
-                                                    
-                                                    </button>
-                                                    <button style={{width: '30%', height: '25px', borderRadius:'5px', marginLeft:'15%'}} className="hov" onClick={() =>{
-                                                        editProductButtonImageSubmit(row.original);
-                                                        handleModalShowEdit();
-                                                        
-                                                    }}>
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/1786/PNG/128/file-edit_114433.png"
-                                                        
-                                                        
-                                                    />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                                
+                            </table>
+                        </div>
                         </div>
                     </Modal.Body>
                 </Modal>
@@ -828,12 +851,12 @@ function SalePoint(){
                                 <img
                                     src="https://cdn.icon-icons.com/icons2/2958/PNG/512/shopping_cart_caddy_ecommerce_store_icon_185958.png"
                                     alt="shoppingCar"
-                                    style={{ opacity: '50%', marginTop:'4%', marginLeft:'20%' }}
+                                    style={{ opacity: '50%', marginTop:'3%', marginLeft:'20%' }}
                                 />
                                 <img
                                     src="https://cdn.icon-icons.com/icons2/3571/PNG/512/navigation_download_down_arrow_icon_225550.png"
                                     alt="shoppingCar"
-                                    style={{ width:'20%', maxHeight:'90px', opacity: '70%', marginTop:'10%', marginLeft:'-30%' }}
+                                    style={{ width:'18%', maxHeight:'90px', opacity: '70%', marginTop:'10%', marginLeft:'-30%' }}
                                 />
                             </div>
                             
