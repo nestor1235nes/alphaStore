@@ -9,7 +9,7 @@ import { useStore } from "../context/StoreContext";
 import { useSale } from "../context/SaleContext";
 import { ToastContainer, toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 import logoImage from "../components/logo.jpg";
 
 
@@ -275,32 +275,32 @@ function SalePoint(){
         
     }
     const deleteProductButtonSubmit = async (productID) => { 
-        const isConfirmed = window.confirm('¿Estás seguro que quieres eliminar este producto?');
-
-        if (isConfirmed) {
-            // El usuario hizo clic en 'Aceptar' (Sí, estoy seguro)
-            const result = await deleteProduct(productID);
+        const result = await Swal.fire({
+            title: '¿Estás seguro que quieres eliminar este producto?',
+            text: "Esta acción no se puede revertir",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+    
+        if (result.isConfirmed) {
+            // El usuario hizo clic en 'Sí, eliminar'
+            await deleteProduct(productID);
             const updatedProducts = await getProducts();
-            const modalProductData = updatedProducts.map(product => {
-                const resultProductAmount = product.productAmount;
-                const resultProductName = product.productName;
-                const resultSalePrice = product.salePrice;
-                const resultPriceProvider = product.priceProvider;
-                const resultProductCode = product.productCode;
-                const resultID = product._id;
-
-                return {
-                    resultProductAmount,
-                    resultProductName,
-                    resultSalePrice,
-                    resultID,
-                    resultPriceProvider,
-                    resultProductCode,
-                };
-            });
-        
-        setDataModalProduct(modalProductData);
-        toast.success('Producto eliminado');
+            const modalProductData = updatedProducts.map(product => ({
+                resultProductAmount: product.productAmount,
+                resultProductName: product.productName,
+                resultSalePrice: product.salePrice,
+                resultID: product._id,
+                resultPriceProvider: product.priceProvider,
+                resultProductCode: product.productCode,
+            }));
+    
+            setDataModalProduct(modalProductData);
+            toast.success('Producto eliminado');
         }
     };
    
