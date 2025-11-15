@@ -5,6 +5,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Link } from 'react-router-dom';
 import { useNotification } from "../context/NotificationContext";
+import { FaCheckCircle, FaWhatsapp, FaEnvelope, FaFacebook, FaInstagram, FaArrowRight, FaPaperPlane } from 'react-icons/fa';
 
 import "./HomePage.css";
 import logoImage from "../components/logo.jpg";
@@ -122,13 +123,13 @@ function Home() {
                     <h1 className="servicios"><strong>Servicios</strong></h1>
                     
                     <ul className="servicios-lista">
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Recuperación de datos"/> Recuperación de datos.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Formateo profundo"/> Formateo profundo.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Asesorías"/> Asesorías.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Cambio y mejora de equipos"/> Cambio y mejora de equipos.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Instalación de puntos de ventas"/> Instalación de puntos de ventas.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Instalación de servidores"/> Instalación de servidores.</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Restauración de fotos"/> Restauración de fotos.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Recuperación de datos.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Formateo profundo.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Asesorías.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Cambio y mejora de equipos.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Instalación de puntos de ventas.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Instalación de servidores.</li>
+                        <li><FaCheckCircle className="tick" style={{color: 'var(--color-success)', fontSize: '1.5rem'}} /> Restauración de fotos.</li>
                     </ul>
                     
                 </div>
@@ -137,10 +138,10 @@ function Home() {
                     <h1 className="servicios-contacto"><strong>Contacto</strong></h1>
 
                     <ul className="servicios-lista">
-                        <li><img className="tick" src="https://static-00.iconduck.com/assets.00/whatsapp-fill-logo-icon-512x512-gg76jrxj.png" alt="Recuperación de datos"/> +56 9 5252 5658</li>
-                        <li><img className="tick" src="https://www.pngitem.com/pimgs/m/173-1737238_computer-icons-email-telephone-circle-email-icon-png.png" alt="Formateo profundo"/> contacto@alphanetcurico.cl</li>
-                        <li><img className="tick" src="https://cdn-icons-png.flaticon.com/512/4494/4494479.png" alt="Asesorías"/> <a href="https://www.facebook.com/alphanet.s.t" className="facebook">Alphanet Curico</a></li>
-                        <li><img className="tick" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROd6Bj7hnqwvQO_dZFBHIyAbKISb4Z-3ySUg&usqp=CAU" alt="Asesorías"/> <a href="https://www.instagram.com/alphanet_curico?igsh=ZXJ2Z244aW14anVl" className="facebook">alphanet_curico</a></li>
+                        <li><FaWhatsapp className="tick" style={{color: '#25D366', fontSize: '1.5rem'}} /> +56 9 5252 5658</li>
+                        <li><FaEnvelope className="tick" style={{color: 'var(--color-primary)', fontSize: '1.5rem'}} /> contacto@alphanetcurico.cl</li>
+                        <li><FaFacebook className="tick" style={{color: '#1877F2', fontSize: '1.5rem'}} /> <a href="https://www.facebook.com/alphanet.s.t" className="facebook">Alphanet Curico</a></li>
+                        <li><FaInstagram className="tick" style={{color: '#E4405F', fontSize: '1.5rem'}} /> <a href="https://www.instagram.com/alphanet_curico?igsh=ZXJ2Z244aW14anVl" className="facebook">alphanet_curico</a></li>
                     </ul>
 
                 </div>
@@ -157,10 +158,8 @@ function Home() {
                         podrás ver gráficamente tus ganancias, tendrás un conteo y registro de cada producto que tengas y más!
                     </p>
                     <h1 className="referencial">Imagen Referencial 
-                    <img
-                    src="https://cdn-icons-png.flaticon.com/512/12071/12071354.png"
-                    className="right-image"
-                /></h1>
+                    <FaArrowRight style={{fontSize: '1.5rem', marginLeft: '0.5rem', color: 'var(--color-gray)'}} />
+                    </h1>
                     
                 </div>
                 <img
@@ -245,9 +244,9 @@ function Home() {
                             {...register("message")}
                         />
 
-                            <button className='boton-send'>Enviar
-                                
-                            
+                            <button className='boton-send'>
+                                <FaPaperPlane style={{fontSize: '1.25rem'}} />
+                                <span>Enviar</span>
                             </button>
                     </form>
 

@@ -6,6 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import { useSale } from "../context/SaleContext";
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { FaUser, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
 import logoImage from "../components/logo.jpg";
 
 const PageGraphics = () =>{
@@ -172,29 +173,23 @@ const PageGraphics = () =>{
                     <h1 className="estandarLetter" style={{marginLeft:'15%'}}>Alpha<strong >Store</strong></h1>    
                 </div> 
                 <div style={{marginLeft:'28%', marginTop:'1%', width:'0px'}}>
-                  <button className="buttonBack">
-                  <img
-                      src="https://cdn.icon-icons.com/icons2/1134/PNG/512/1486348819-back-backwards-repeat-arrows-arrow-blue_80473.png"
-                      alt="goBack"
-                      style={{maxWidth:'30%', marginTop:'1%', marginLeft:'5%'}}
-                  /> 
-                    <Link to= "/salepoint" style={{marginTop:'3%',marginLeft:'5%', color:'white', fontSize:'1rem'}} className="estandarLetter">Volver</Link> 
-                  </button>
+                  <Link to="/salepoint">
+                    <button className="buttonBack">
+                        <FaArrowLeft style={{fontSize: '1.25rem'}} />
+                        <span>Volver</span>
+                    </button>
+                  </Link>
                 </div>
                <Dropdown>
                <Dropdown.Toggle variant="light" id="dropdown-basic" className="userGraphics" style={{overflow:'hidden', whiteSpace:'nowrap'}}>
-               <img
-                   src="https://cdn.icon-icons.com/icons2/632/PNG/512/user_icon-icons.com_57997.png"
-                   className="userLogGraphics"
-               />
+               <div className="userLogGraphics">
+                   <FaUser />
+               </div>
                <h1 className="user-name">{user.username}</h1>
                </Dropdown.Toggle>
                <Dropdown.Menu style={{  backgroundColor: 'white', fontSize: '1.3rem', width:'230px', marginLeft:'50%'}}>
-                   <Dropdown.Item style={{color: 'black', display:'flex'}} onClick={logOutSubmit}>
-                       <img
-                       src="https://cdn.icon-icons.com/icons2/1207/PNG/512/1491313938-close_82982.png"
-                       className="buttonClose"
-                       />
+                   <Dropdown.Item style={{color: 'black', display:'flex', alignItems: 'center', gap: '10px'}} onClick={logOutSubmit}>
+                       <FaSignOutAlt style={{fontSize: '1.5rem', color: 'var(--color-error)'}} />
                        Cerrar Sesión</Dropdown.Item>
                </Dropdown.Menu>
                </Dropdown>        

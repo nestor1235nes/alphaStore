@@ -1,354 +1,213 @@
-import React from "react";
-import './SalePoint.css';
-import { useForm } from 'react-hook-form';
-import {useReactTable, getCoreRowModel, flexRender} from '@tanstack/react-table';
-import { useEffect, useState, useRef } from 'react';
-import { Modal , Dropdown, Form, Button } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    Typography,
+    Avatar,
+    Menu,
+    MenuItem,
+    TextField,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Box,
+    Card,
+    CardContent,
+    Grid,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Chip,
+    Divider,
+    ListItemIcon,
+    ListItemText,
+    InputAdornment,
+    Fab,
+    Tooltip,
+    Badge,
+    Stack,
+    Container,
+} from '@mui/material';
+import {
+    Person,
+    Inventory,
+    PeopleAlt,
+    BarChart,
+    Logout,
+    ShoppingCart,
+    Delete,
+    Edit,
+    Add,
+    Remove,
+    Payments,
+    CreditCard,
+    Search,
+    CheckCircle,
+    Close as CloseIcon,
+    ShoppingCartCheckout,
+    AttachMoney,
+} from '@mui/icons-material';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
+import { ToastContainer, toast } from 'react-toastify';
 import { useAuth } from "../context/AuthContext";
 import { useStore } from "../context/StoreContext";
 import { useSale } from "../context/SaleContext";
-import { ToastContainer, toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
-
 import logoImage from "../components/logo.jpg";
 
+function SalePoint() {
+    const navigate = useNavigate();
+    const { signout, user, signup } = useAuth();
+    const { deleteProduct, getProducts, createProduct, getProduct } = useStore();
+    const { createSale } = useSale();
 
-function SalePoint(){
-
-    const {register, handleSubmit} = useForm();
-    const { signout, user } = useAuth();
-
+    // Estados
     const [totalSalesAmount, setTotalSalesAmount] = useState('');
-
-    const [showModalEmployee, setShowModalEmployee] = useState(false);
-    const handleModalShowEmployee = () => setShowModalEmployee(true);
-    const handleModalCloseEmployee = () => setShowModalEmployee(false);
-
-    const { deleteProduct, editProduct, getProducts, createProduct, getProduct } = useStore();
-
-
-    
-
-
-
-    //////////////////////////////////////////////////////////////////////////
-    //Añadiendo o eliminando productos al carro de compras
-    
     const [dataShoppingCar, setDatashoppingCar] = useState([]);
-    const [barcode , setBarcode ] =useState('');
-    
+    const [barcode, setBarcode] = useState('');
+    const [auxStorage, setAuxStorage] = useState([]);
+    const [dataModalProduct, setDataModalProduct] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [totalPrice, setTotalPrice] = useState(0);
+    const [turned, setTurned] = useState(0);
+    const [cashAmount, setCashAmount] = useState("");
+    const [startingAmount, setStartingAmount] = useState('');
+
+    // Estados para menús y modales
+    const [anchorElUser, setAnchorElUser] = useState(null);
+    const [showModalInit, setShowModalInit] = useState(false);
+    const [showModalProduct, setShowModalProduct] = useState(false);
+    const [showModalEdit, setShowModalEdit] = useState(false);
+    const [showModalEmployee, setShowModalEmployee] = useState(false);
+    const [showModalPayCash, setShowModalPayCash] = useState(false);
+    const [showModalSaleSuccesful, setShowModalSaleSuccesful] = useState(false);
+
+    // Estados para formularios
+    const [productForm, setProductForm] = useState({
+        productName: '',
+        productCode: '',
+        productAmount: '',
+        priceProvider: '',
+        salePrice: ''
+    });
+    const [employeeForm, setEmployeeForm] = useState({
+        username: '',
+        email: '',
+        password: ''
+    });
+
+    // Handlers de menú
+    const handleOpenUserMenu = (event) => setAnchorElUser(event.currentTarget);
+    const handleCloseUserMenu = () => setAnchorElUser(null);
+
+    // Inicialización
+    useEffect(() => {
+        setShowModalInit(true);
+        const totalSalesAmountFromStorage = localStorage.getItem('totalSalesAmount');
+        if (totalSalesAmountFromStorage) {
+            setTotalSalesAmount(totalSalesAmountFromStorage);
+        }
+    }, []);
 
     useEffect(() => {
         window.addEventListener('keydown', handleBarcodeScan);
-        return () => {
-            window.removeEventListener('keydown', handleBarcodeScan);
-        };
+        return () => window.removeEventListener('keydown', handleBarcodeScan);
     }, []);
-    
+
+    useEffect(() => {
+        let timer;
+        if (showModalSaleSuccesful) {
+            timer = setTimeout(() => setShowModalSaleSuccesful(false), 5000);
+        }
+        return () => clearTimeout(timer);
+    }, [showModalSaleSuccesful]);
+
+    // Scanner de código de barras
     let tempBarcode = '';
-    
     const handleBarcodeScan = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            
             onSubmit({ producto: tempBarcode });
-            tempBarcode = ''; // Reinicia tempBarcode después de enviar
+            tempBarcode = '';
         } else {
             tempBarcode += e.key;
         }
     };
-    const [auxStorage, setAuxStorage] = useState([]); 
-    const updateProductStorage = async () => {
-        const sale = {
-            products: dataShoppingCar.map(product => ({
-                productName: product.resultProductName,
-                productCode: product.resultProductCode,
-                saleAmount: product.cont.toString(),
-                priceProvider: product.resultPriceProvider,
-                salePrice: product.resultSalePrice,
-                saleTotal: totalPrice.toString(),
-            })),
-        };
-    
-        // Recorrer cada producto vendido en 'sale'
-        sale.products.forEach(soldProduct => {
-            // Buscar el producto correspondiente en 'auxStorage'
-            const productInStorage = auxStorage.find(product => product.resultProductCode === soldProduct.productCode);
-            
-            if (productInStorage) {
-                // Restar la cantidad vendida de la cantidad en 'auxStorage'
-                productInStorage.resultProductAmount -= parseInt(soldProduct.saleAmount);
-                
-            }
-        });
-    
-        // Actualizar el estado 'auxStorage' con los productos actualizados
-        setAuxStorage([...auxStorage]);
-        
 
-        auxStorage.forEach(async (product) => {
-            
-            const productName = product.resultProductName;
-            const productCode = product.resultProductCode;
-            const productAmount = product.resultProductAmount.toString();
-            const priceProvider = product.resultPriceProvider;
-            const salePrice = product.resultSalePrice;
-
-            const editProduct = {
-                productName,
-                productCode,
-                productAmount,
-                priceProvider,
-                salePrice,
-            };
-            
-            await deleteProduct(product.resultID);
-            const result = await createProduct(editProduct);
-            
-        });
-        
-    };
-    
+    // Funciones de carrito
     const onSubmit = async (data) => {
-        const result = await getProduct(data);
-        
-        const newProduct = {
-            resultProductAmount: result.productAmount,
-            resultProductName: result.productName,
-            resultSalePrice: result.salePrice,
-            resultID: result._id,
-            resultPriceProvider: result.priceProvider,
-            resultProductCode: result.productCode,
-            cont: 1,
-        };
-        
+        try {
+            const result = await getProduct(data);
+            const newProduct = {
+                resultProductAmount: result.productAmount,
+                resultProductName: result.productName,
+                resultSalePrice: result.salePrice,
+                resultID: result._id,
+                resultPriceProvider: result.priceProvider,
+                resultProductCode: result.productCode,
+                cont: 1,
+            };
 
-        const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
-    
-        if (existingProductIndex !== -1) {
-            // Si el producto ya está en el carrito, incrementa su contador
-            const updatedShoppingCar = [...dataShoppingCar];
-            updatedShoppingCar[existingProductIndex].cont++;
-            setDatashoppingCar(updatedShoppingCar);
-        } else {
-            // Si el producto no está en el carrito, agrégalo
-            setAuxStorage(prevData => {
-                // Resto del código para agregar un nuevo producto
-                return [...prevData, newProduct];
-              });
-            setDatashoppingCar(prevData => {
-                // Resto del código para agregar un nuevo producto
-                return [...prevData, newProduct];
-              });
-        }
-    };
-    const onSubmitLess = async (data) => {
-        
-        const result = await getProduct(data);
-        const newProduct = {
-            resultProductAmount: result.productAmount,
-            resultProductName: result.productName,
-            resultSalePrice: result.salePrice,
-            resultID: result._id,
-            resultPriceProvider: result.priceProvider,
-            resultProductCode: result.productCode,
-            cont: 1,
-        };
-        
+            const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
 
-        const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
-        if (existingProductIndex !== -1) {
-            // Si el producto ya está en el carrito, decrementa su contador
-            const updatedShoppingCar = [...dataShoppingCar];
-            updatedShoppingCar[existingProductIndex].cont--;
-            
-            if (updatedShoppingCar[existingProductIndex].cont === 0) {
-                deleteProductShoppingCarButtonSubmit(newProduct.resultID);
-            }else{
+            if (existingProductIndex !== -1) {
+                const updatedShoppingCar = [...dataShoppingCar];
+                updatedShoppingCar[existingProductIndex].cont++;
                 setDatashoppingCar(updatedShoppingCar);
+            } else {
+                setAuxStorage(prevData => [...prevData, newProduct]);
+                setDatashoppingCar(prevData => [...prevData, newProduct]);
             }
-        
-            
-        } else {
-            // Si el producto no está en el carrito, agrégalo
-            setDatashoppingCar(prevData => {
-                // Resto del código para agregar un nuevo producto
-                return [...prevData, newProduct];
-            });
+        } catch (error) {
+            toast.error('Producto no encontrado');
         }
     };
 
-    useEffect(() => {
-        
-      }, [dataShoppingCar]);
-      
+    const onSubmitLess = async (data) => {
+        try {
+            const result = await getProduct(data);
+            const newProduct = {
+                resultID: result._id,
+                resultProductCode: result.productCode,
+            };
+
+            const existingProductIndex = dataShoppingCar.findIndex(item => item.resultID === newProduct.resultID);
+            if (existingProductIndex !== -1) {
+                const updatedShoppingCar = [...dataShoppingCar];
+                updatedShoppingCar[existingProductIndex].cont--;
+
+                if (updatedShoppingCar[existingProductIndex].cont === 0) {
+                    deleteProductShoppingCarButtonSubmit(newProduct.resultID);
+                } else {
+                    setDatashoppingCar(updatedShoppingCar);
+                }
+            }
+        } catch (error) {
+            toast.error('Error al procesar');
+        }
+    };
+
     const deleteProductShoppingCarButtonSubmit = (productID) => {
-        // Buscar el índice del producto en el array
-        console.log(productID)
-        const index = dataShoppingCar.findIndex(product => product.resultID === productID);
-        console.log(index)
-        if (index !== -1) {
-            // Eliminar el producto del array
-            const updatedShoppingCar = [...dataShoppingCar];
-            updatedShoppingCar.splice(index, 1);
-            
-            // Actualizar el estado de dataShoppingCar
-            setDatashoppingCar(updatedShoppingCar);
+        const updatedShoppingCar = dataShoppingCar.filter(product => product.resultID !== productID);
+        setDatashoppingCar(updatedShoppingCar);
+    };
+
+    const handleAddToCart = (e) => {
+        e.preventDefault();
+        if (barcode.trim()) {
+            onSubmit({ producto: barcode });
+            setBarcode('');
         }
     };
-    
-    const columnsShoppingCar = [
-        {
-            header: "Cantidad",
-            accessorKey: 'cont'
-        },
-        {
-            header: "Nombre",
-            accessorKey: 'resultProductName'
-        },
-        {
-            header: "Precio unitario",
-            accessorKey: 'resultSalePrice'
-        },
-        
-    ]
 
-    const shoppingCar = useReactTable({
-        data: dataShoppingCar,
-        columns: columnsShoppingCar,
-        getCoreRowModel: getCoreRowModel(),
-    });
-    //////////////////////////////////////////////////////////////////////////////////
-    //Guardar lo que captura el lector
-    
-      
-
-    //////////////////////////////////////////////////////////////////////////
-    //Modal para agregar, editar o eliminar algun producto del almacen
-    const [showModalProduct, setShowModalProduct] = useState(false);
-    const handleModalShowProduct = () => setShowModalProduct(true);
-    const handleModalCloseProduct = () => setShowModalProduct(false);
-
-    const [selectedProduct, setSelectedProduct] = useState("");
-    const editProductButtonImageSubmit = (row) => {
-        setSelectedProduct(row);
-    };
-    const editProductModalSubmit = async (event) =>{
-        event.preventDefault();
-        const productName = event.target.productName.value;
-        const productCode = event.target.productCode.value;
-        const productAmount = event.target.productAmount.value;
-        const priceProvider = event.target.priceProvider.value;
-        const salePrice = event.target.salePrice.value;
-        
-        const editProductData = {
-            productName,
-            productCode,
-            productAmount,
-            priceProvider,
-            salePrice,
-          };
-        await deleteProduct(selectedProduct.resultID);
-        const result = await createProduct(editProductData);
-        const updatedProducts = await getProducts();
-        const modalProductData = updatedProducts.map(product => {
-            const resultProductAmount = product.productAmount;
-            const resultProductName = product.productName;
-            const resultSalePrice = product.salePrice;
-            const resultID = product._id;
-            const resultPriceProvider = product.priceProvider;
-            const resultProductCode = product.productCode;
-
-            return {
-                resultProductAmount,
-                resultProductName,
-                resultSalePrice,
-                resultID,
-                resultPriceProvider,
-                resultProductCode
-            };
-        });
-        
-        setDataModalProduct(modalProductData);
-        toast.success('Producto editado exitosamente');
-        handleModalCloseEdit();
-        
-    }
-    const deleteProductButtonSubmit = async (productID) => { 
-        const isConfirmed = window.confirm('¿Estás seguro que quieres eliminar este producto?');
-
-        if (isConfirmed) {
-            // El usuario hizo clic en 'Aceptar' (Sí, estoy seguro)
-            const result = await deleteProduct(productID);
-            const updatedProducts = await getProducts();
-            const modalProductData = updatedProducts.map(product => {
-                const resultProductAmount = product.productAmount;
-                const resultProductName = product.productName;
-                const resultSalePrice = product.salePrice;
-                const resultPriceProvider = product.priceProvider;
-                const resultProductCode = product.productCode;
-                const resultID = product._id;
-
-                return {
-                    resultProductAmount,
-                    resultProductName,
-                    resultSalePrice,
-                    resultID,
-                    resultPriceProvider,
-                    resultProductCode,
-                };
-            });
-        
-        setDataModalProduct(modalProductData);
-        toast.success('Producto eliminado');
-        }
-    };
-   
-    
-    const addProductSubmit = async (event) => {
-        event.preventDefault();
-        const productName = event.target.productName.value;
-        const productCode = event.target.productCode.value;
-        const productAmount = event.target.productAmount.value;
-        const priceProvider = event.target.priceProvider.value;
-        const salePrice = event.target.salePrice.value;
-
-        const addProductData = {
-            productName,
-            productCode,
-            productAmount,
-            priceProvider,
-            salePrice,
-          };
-
-        const result = await createProduct(addProductData);
-        
-        const updatedProducts = await getProducts();
-        const modalProductData = updatedProducts.map(product => {
-            const resultProductAmount = product.productAmount;
-            const resultProductName = product.productName;
-            const resultSalePrice = product.salePrice;
-            const resultID = product._id;
-            const resultPriceProvider = product.priceProvider;
-            const resultProductCode = product.productCode;
-
-            return {
-                resultProductAmount,
-                resultProductName,
-                resultSalePrice,
-                resultID,
-                resultPriceProvider,
-                resultProductCode
-            };
-        });
-        
-        setDataModalProduct(modalProductData);
-        event.target.reset();
-        toast.success('Producto agregado exitosamente');
-    };
-
-    const [dataModalProduct, setDataModalProduct] = useState([]);
-
+    // Funciones de productos
     const fetchDataModalProduct = async () => {
         try {
             const result = await getProducts();
@@ -362,118 +221,149 @@ function SalePoint(){
             }));
             setDataModalProduct(modalProductData);
         } catch (error) {
-            console.error("Error al obtener datos:", error);
+            toast.error("Error al obtener datos");
         }
     };
-    const handleOpenModalAndFetchData = () => {
-        handleModalShowProduct(); // Abre el modal
-        fetchDataModalProduct(); // Obtiene los productos
+
+    const handleOpenModalProduct = () => {
+        setShowModalProduct(true);
+        fetchDataModalProduct();
+        handleCloseUserMenu();
     };
 
-    const columnsProduct = [
-        {
-            header: "Cantidad",
-            accessorKey: 'resultProductAmount'
-        },
-        {
-            header: "Nombre",
-            accessorKey: 'resultProductName'
-        },
-        {
-            header: "Precio",
-            accessorKey: 'resultSalePrice'
-        },
-    ]
-    
-    const tableAddEditDeleteProduct = useReactTable({
-        data: dataModalProduct,  // Cambiado a 'data' en lugar de 'dataModalProduct'
-        columns: columnsProduct,
-        getCoreRowModel: getCoreRowModel(),
-    });
-
-//////////////////////////////////////////////////////////////////////////
-    //Funcion para cerrar sesion
-    const logOutSubmit = async () => {
-        localStorage.removeItem('totalSalesAmount'); // Eliminar totalSalesAmount de localStorage
-        setTotalSalesAmount('');
-        const result = await signout();
+    const addProductSubmit = async () => {
+        try {
+            await createProduct(productForm);
+            await fetchDataModalProduct();
+            setProductForm({
+                productName: '',
+                productCode: '',
+                productAmount: '',
+                priceProvider: '',
+                salePrice: ''
+            });
+            toast.success('Producto agregado exitosamente');
+        } catch (error) {
+            toast.error('Error al agregar producto');
+        }
     };
 
-
-//////////////////////////////////////////////////////////////////////////
-//Modal para agregar empleados
-    const [showModalEdit, setShowModalEdit] = useState(false);
-    const handleModalShowEdit = () => setShowModalEdit(true);
-    const handleModalCloseEdit = () => setShowModalEdit(false);
-
-    const { signup, isAuthenticated, errors: registerErrors } = useAuth();
-    const sendRegisterSubmit = async (event) => {
-        event.preventDefault();
-        const username = event.target.elements.username.value;
-        const email = event.target.elements.email.value;
-        const password = event.target.elements.password.value;
-    
-        const addEmployee = {
-            username,
-            email,
-            password,
-          };
-
-        const result = await signup(addEmployee);
-        
+    const editProductModalSubmit = async () => {
+        try {
+            await deleteProduct(selectedProduct.resultID);
+            await createProduct(productForm);
+            await fetchDataModalProduct();
+            setShowModalEdit(false);
+            toast.success('Producto editado exitosamente');
+        } catch (error) {
+            toast.error('Error al editar producto');
+        }
     };
 
-    ////////////////////////////////////////////////////////////////////////
-    //Seccion para guardar la venta realizada
+    const deleteProductButtonSubmit = async (productID) => {
+        if (window.confirm('¿Estás seguro que quieres eliminar este producto?')) {
+            try {
+                await deleteProduct(productID);
+                await fetchDataModalProduct();
+                toast.success('Producto eliminado');
+            } catch (error) {
+                toast.error('Error al eliminar producto');
+            }
+        }
+    };
 
-    const [showModalPayCash, setShowModalPayCash] = useState(false);
-    const handleModalShowPayCash = () => setShowModalPayCash(true);
-    const handleModalClosePayCash = () => setShowModalPayCash(false);  
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setProductForm({
+            productName: product.resultProductName,
+            productCode: product.resultProductCode,
+            productAmount: product.resultProductAmount,
+            priceProvider: product.resultPriceProvider,
+            salePrice: product.resultSalePrice
+        });
+        setShowModalEdit(true);
+    };
 
-    const {createSale} = useSale();
-    const [totalPrice, setTotalPrice] = useState(0); // Estado para almacenar el monto total de la venta
-    const [turned, setTurned] = useState(0);
+    // Funciones de empleados
+    const sendRegisterSubmit = async () => {
+        try {
+            await signup(employeeForm);
+            setEmployeeForm({ username: '', email: '', password: '' });
+            setShowModalEmployee(false);
+            toast.success('Empleado agregado');
+        } catch (error) {
+            toast.error('Error al agregar empleado');
+        }
+    };
+
+    // Funciones de pago
+    const updateProductStorage = async () => {
+        const sale = {
+            products: dataShoppingCar.map(product => ({
+                productName: product.resultProductName,
+                productCode: product.resultProductCode,
+                saleAmount: product.cont.toString(),
+                priceProvider: product.resultPriceProvider,
+                salePrice: product.resultSalePrice,
+                saleTotal: totalPrice.toString(),
+            })),
+        };
+
+        sale.products.forEach(soldProduct => {
+            const productInStorage = auxStorage.find(product => product.resultProductCode === soldProduct.productCode);
+            if (productInStorage) {
+                productInStorage.resultProductAmount -= parseInt(soldProduct.saleAmount);
+            }
+        });
+
+        setAuxStorage([...auxStorage]);
+
+        for (const product of auxStorage) {
+            const editProduct = {
+                productName: product.resultProductName,
+                productCode: product.resultProductCode,
+                productAmount: product.resultProductAmount.toString(),
+                priceProvider: product.resultPriceProvider,
+                salePrice: product.resultSalePrice,
+            };
+            await deleteProduct(product.resultID);
+            await createProduct(editProduct);
+        }
+    };
 
     const calculatedTurned = (paid, totalp) => {
         const result = paid - totalp;
-        
-    
-        if (result >= 0) { // Utilizamos result en lugar de turned para verificar si alcanza
+        if (result >= 0) {
             setTurned(result);
             updateProductStorage();
             confirmSale();
         } else {
             toast.error("Dinero inferior al monto total del carrito");
         }
-    }
+    };
 
-
-    const openModalPaid = async () => {
+    const openModalPaid = () => {
         if (dataShoppingCar.length === 0) {
             toast.error('El carrito de compras está vacío');
             return;
         }
-
-        // Calcula el monto total de la venta
         const total = dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0);
         setTotalPrice(total);
-
-        handleModalShowPayCash();
+        setShowModalPayCash(true);
     };
 
     const handleCashPayment = (amount) => {
-        calculatedTurned(amount, totalPrice); 
-        
+        calculatedTurned(amount, totalPrice);
     };
-    const [cashAmount, setCashAmount] = useState("");
-    const handleCashPaymentManual = (e) => {
-        e.preventDefault(); // Evita que se recargue la página al enviar el formulario
-        calculatedTurned(cashAmount, totalPrice);
-        setCashAmount("");
+
+    const handleCashPaymentManual = () => {
+        if (cashAmount) {
+            calculatedTurned(Number(cashAmount), totalPrice);
+            setCashAmount("");
+        }
     };
 
     const confirmSale = async () => {
-
         const sale = {
             products: dataShoppingCar.map(product => ({
                 productName: product.resultProductName,
@@ -486,503 +376,528 @@ function SalePoint(){
         };
 
         try {
-            const resultSale = await createSale(sale);
-
+            await createSale(sale);
             toast.success('Venta realizada');
-            handleModalClosePayCash();
-            handleModalShowSaleSuccesful();
+            setShowModalPayCash(false);
+            setShowModalSaleSuccesful(true);
             setDatashoppingCar([]);
             setAuxStorage([]);
         } catch (error) {
-            console.error(`Error creating sale: ${error.message}`);
+            toast.error('Error al crear venta');
         }
-       
     };
-    //Modal para mostrar que la venta fue un exito
-    const [showModalSaleSuccesful, setShowModalSaleSuccesful] = useState(false);
-    const handleModalShowSaleSuccesful = () => setShowModalSaleSuccesful(true);
-    const handleModalCloseSaleSuccesful = () => setShowModalSaleSuccesful(false);
 
-    useEffect(() => {
-        let timer;
-        if (showModalSaleSuccesful) {
-            timer = setTimeout(() => {
-                handleModalCloseSaleSuccesful();
-            }, 5000); // 5000 milisegundos = 5 segundos
+    const saveModalStartingAmount = () => {
+        if (startingAmount) {
+            setTotalSalesAmount(startingAmount);
+            localStorage.setItem('totalSalesAmount', startingAmount);
+            setShowModalInit(false);
         }
+    };
 
-        return () => {
-            clearTimeout(timer);
-        };
-    }, [showModalSaleSuccesful]);
+    const logOutSubmit = async () => {
+        localStorage.removeItem('totalSalesAmount');
+        setTotalSalesAmount('');
+        await signout();
+        handleCloseUserMenu();
+    };
 
-    ////////////////////////////////////////////////////////////////////////
-    //Modal para obtener monto inicial de la caja
+    // Configuración de tablas
+    const columnsShoppingCar = [
+        { header: "Cantidad", accessorKey: 'cont' },
+        { header: "Nombre", accessorKey: 'resultProductName' },
+        { header: "Precio unitario", accessorKey: 'resultSalePrice' },
+    ];
 
-    const [showModalInit, setShowModalInit] = useState(false);
-    const [startingAmount, setStartingAmount] = useState('');
-    useEffect(() => {
-        setShowModalInit(true);
-      }, []);
-      useEffect(() => {
-        const totalSalesAmountFromStorage = localStorage.getItem('totalSalesAmount');
-        if (totalSalesAmountFromStorage) {
-          setTotalSalesAmount(totalSalesAmountFromStorage);
-          
-        }
-      }, []);
-    
-      const saveModalStartingAmount = (e) => {
-        e.preventDefault();
-        setTotalSalesAmount(startingAmount);
-        localStorage.setItem('totalSalesAmount', startingAmount); // Guardar en localStorage
-        setShowModalInit(false);
-      }
+    const columnsProduct = [
+        { header: "Cantidad", accessorKey: 'resultProductAmount' },
+        { header: "Nombre", accessorKey: 'resultProductName' },
+        { header: "Precio", accessorKey: 'resultSalePrice' },
+    ];
 
-    return(
-        <div className="bigContainer">
-           <Modal show={totalSalesAmount  === ''} onHide={() => {}}>
-            <Modal.Header closeButton>
-                <Modal.Title className="estandarLetter">Monto inicial de la caja</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form style={{textAlign:'center'}}>
-                <Form.Group controlId="payCash">
-                    <Form.Control
-                    className="modalLeter"
-                    style={{textAlign:'center'}}
-                    type="text"
-                    placeholder="Ingresa monto inicial"
-                    name="startingAmount"
-                    value={startingAmount}
-                    onChange={(e) => setStartingAmount(e.target.value)}
-                    required
-                    />
-                </Form.Group>
+    const shoppingCar = useReactTable({
+        data: dataShoppingCar,
+        columns: columnsShoppingCar,
+        getCoreRowModel: getCoreRowModel(),
+    });
 
-                <Button
-                    className="estandarLetter"
-                    variant="primary"
-                    type="button" // Cambia el tipo de submit a button para evitar la recarga de la página
-                    onClick={(e) => saveModalStartingAmount(e)} // Pasa el evento a la función
-                    style={{marginTop:'10%', backgroundColor:'#344a57'}}
-                >
-                    Guardar
-                </Button>
-                </Form>
-            </Modal.Body>
-            </Modal>
-            
-            <img
-                    src={logoImage}
-                    alt="Logo"
-                    className="logo-home"
-                />
-            
-            <div className="headContainer">
+    const tableAddEditDeleteProduct = useReactTable({
+        data: dataModalProduct,
+        columns: columnsProduct,
+        getCoreRowModel: getCoreRowModel(),
+    });
 
-                
-                <h1>Alpha<strong >Store</strong></h1>         
-                <Modal show={showModalProduct} onHide={handleModalCloseProduct} size='xl'>
-                    <Modal.Header closeButton>
-                    <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Gestiona tus productos</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body className="modalLeter">
-                        <div style={{maxWidth:'100%', display:'flex'}}>
-                            <div className="gestionProdcutContainer">
-                                <Form style={{textAlign:'center'}} onSubmit={addProductSubmit}>
-                                    <Form.Group controlId="formNombre">
-                                    <Form.Label className="modalLeter" style={{marginBottom:'3%'}}>Nombre del producto</Form.Label>
-                                    <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" name="productName" required />
-                                    </Form.Group>
-                                    <Form.Group controlId="formCodigo">
-                                    <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Código de barras</Form.Label>
-                                    <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text"  name="productCode" required />
-                                    </Form.Group>
+    return (
+        <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f7fa' }}>
+            {/* AppBar moderna */}
+            <AppBar position="sticky" elevation={2} sx={{ bgcolor: 'white', color: 'text.primary' }}>
+                <Toolbar sx={{ justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar src={logoImage} sx={{ width: 48, height: 48 }} />
+                        <Typography variant="h5" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            AlphaStore
+                        </Typography>
+                    </Box>
 
-                                    <Form.Group controlId="formCantidad">
-                                    <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Cantidad</Form.Label>
-                                    <Form.Control className="modalLeter" style={{textAlign:'center'}} type="number" name="productAmount" required />
-                                    </Form.Group>
-                                    <Form.Group controlId="formProveedor">
-                                    <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Precio del proveedor</Form.Label>
-                                    <Form.Control className="modalLeter" style={{textAlign:'center'}} type="number" name="priceProvider" required />
-                                    </Form.Group>
-                                    <Form.Group controlId="formVenta">
-                                    <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Precio de venta</Form.Label>
-                                    <Form.Control className="modalLeter" style={{textAlign:'center'}} type="number" name="salePrice" required />
-                                    </Form.Group>
-
-                                    <Button variant="primary" type="submit" style={{marginTop:'10%', backgroundColor:'#344a57', maxWidth:'60% ', marginLeft: '20%'}} >
-                                    Agregar producto
-                                    </Button>
-                                    
-                                </Form>
-                            </div>
-                            <table className="tableStyle">
-                            <thead className="headTableModal">
-                                {
-                                    tableAddEditDeleteProduct.getHeaderGroups().map((headerGroup, j) =>(
-                                        <tr key={j} >
-                                            {
-                                                headerGroup.headers.map((headers, j) =>(
-                                                    <th key={j}>
-                                                        {headers.column.columnDef.header}
-
-                                                    </th>
-                                                ))
-                                            }
-                                            
-                                        </tr>
-                                    ))
-                                }
-                            </thead>
-                            <tbody>
-                                {
-                                    tableAddEditDeleteProduct.getRowModel().rows.map((row, j) =>(
-                                        <tr key={j} >
-                                            {row.getVisibleCells().map((cell,j) =>(
-                                                <td key={j} className="celdasTableModal">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                            <td className="celdasTableModal">
-                                                <div className="lastColumn">
-                                                    <button style={{width: '30%', height: '25px', borderRadius:'10px', marginLeft:'15%'}} onClick={() => {
-                                                        
-                                                        deleteProductButtonSubmit(row.original.resultID);
-                                                        
-                                                    }}>
-                                                        
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
-                                                        alt="Imagen"
-                                                        style={{borderRadius: '5px'}}
-                                                    />
-                                                    
-                                                    </button>
-                                                    <button style={{width: '30%', height: '25px', borderRadius:'5px', marginLeft:'15%'}} className="hov" onClick={() =>{
-                                                        editProductButtonImageSubmit(row.original);
-                                                        handleModalShowEdit();
-                                                        
-                                                    }}>
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/1786/PNG/128/file-edit_114433.png"
-                                                        
-                                                        
-                                                    />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
-                        </div>
-                    </Modal.Body>
-                </Modal>
-                <Modal show={showModalEdit} onHide={handleModalCloseEdit}>
-                    <Modal.Header closeButton>
-                        <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Editar Producto</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <Form style={{textAlign:'center'}} onSubmit={editProductModalSubmit}>
-                            <Form.Group controlId="formNombreProduct">
-                            <Form.Label className="modalLeter" style={{marginBottom:'3%'}}>Nombre del producto</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder={selectedProduct.resultProductName} name="productName"  />
-                            </Form.Group>
-
-                            <Form.Group controlId="formCodigo">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Codigo de barras</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder={selectedProduct.resultProductCode} name="productCode"  />
-                            </Form.Group>
-
-                            <Form.Group controlId="formCantidad">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Cantidad</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder={selectedProduct.resultProductAmount} name="productAmount"  />
-                            </Form.Group>
-
-                            <Form.Group controlId="formProveedor">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Precio del Proveedor</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder={selectedProduct.resultPriceProvider} name="priceProvider"  />
-                            </Form.Group>
-
-                            <Form.Group controlId="formVenta">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Precio de venta</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder={selectedProduct.resultSalePrice} name="salePrice"  />
-                            </Form.Group>
-
-                            <Button variant="primary" type="submit" style={{marginTop:'10%', backgroundColor:'#344a57'}}>
-                            Editar
-                            </Button>
-                            
-                        </Form>
-                        
-                    </Modal.Body>
-                </Modal>
-                <Modal show={showModalEmployee} onHide={handleModalCloseEmployee}>
-                    <Modal.Header closeButton>
-                    <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Gestionar empleados</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <Form style={{textAlign:'center'}} onSubmit={sendRegisterSubmit}>
-                            <Form.Group controlId="formNombre">
-                            <Form.Label className="modalLeter" style={{marginBottom:'3%'}}>Nombre</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="text" placeholder="Ingresa nombre" name="username" required />
-                            </Form.Group>
-
-                            <Form.Group controlId="formEmail">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Email</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="email" placeholder="Ingresa email" name="email" required />
-                            </Form.Group>
-
-                            <Form.Group controlId="formContraseña">
-                            <Form.Label className="modalLeter" style={{marginTop:'5%',marginBottom:'3%'}}>Contraseña</Form.Label>
-                            <Form.Control className="modalLeter" style={{textAlign:'center'}} type="password" placeholder="Ingresa contraseña" name="password" required />
-                            </Form.Group>
-
-                            <Button variant="primary" type="submit" style={{marginTop:'10%', backgroundColor:'#344a57'}}>
-                            Enviar
-                            </Button>
-                            
-                        </Form>
-                    </Modal.Body>
-                </Modal>
-                
-                <Dropdown>
-                <Dropdown.Toggle variant="light" id="dropdown-basic" className="user" style={{overflow:'hidden', whiteSpace:'nowrap'}}>
-                <img
-                    src="https://cdn.icon-icons.com/icons2/632/PNG/512/user_icon-icons.com_57997.png"
-                    className="userLog"
-                />
-                <h1 className="user-name">{user.username}</h1>
-                </Dropdown.Toggle>
-                <Dropdown.Menu style={{  backgroundColor: 'white', fontSize: '1.3rem', width:'270px', borderColor:'#9b9b9b'}}>
-                <Dropdown.Item onClick={handleOpenModalAndFetchData} style={{color: 'black', borderBottom: '1px solid #9b9b9b', display:'flex'}}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/3653/PNG/512/market_shop_ecommerce_delivery_product_icon_228243.png"
-                        className="product"
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                            avatar={<Avatar sx={{ bgcolor: '#667eea' }}><Person /></Avatar>}
+                            label={user?.username || 'Usuario'}
+                            onClick={handleOpenUserMenu}
+                            sx={{ cursor: 'pointer', py: 2.5, px: 1 }}
                         />
-                        Gestionar productos</Dropdown.Item>
-                    <Dropdown.Item onClick={() => { handleModalShowEmployee(); }} style={{color: 'black', borderBottom: '1px solid #9b9b9b', paddingTop:'3%', paddingBottom:'3%', display:'flex'}}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/1572/PNG/512/3592855-business-man-employee-general-human-member-office-tie_107745.png"
-                        className="product"
-                        />
-                        Gestionar empleados</Dropdown.Item>
-                        <Dropdown.Item
-                            as={Link}
-                            to='/graphicspage'
-                            style={{ color: 'black', display: 'flex', borderBottom: '1px solid #9b9b9b', }}
+                        <Menu
+                            anchorEl={anchorElUser}
+                            open={Boolean(anchorElUser)}
+                            onClose={handleCloseUserMenu}
+                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        >
+                            <MenuItem onClick={handleOpenModalProduct}>
+                                <ListItemIcon><Inventory fontSize="small" /></ListItemIcon>
+                                <ListItemText>Gestionar productos</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={() => { setShowModalEmployee(true); handleCloseUserMenu(); }}>
+                                <ListItemIcon><PeopleAlt fontSize="small" /></ListItemIcon>
+                                <ListItemText>Gestionar empleados</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={() => navigate('/graphicspage')}>
+                                <ListItemIcon><BarChart fontSize="small" /></ListItemIcon>
+                                <ListItemText>Gráficos</ListItemText>
+                            </MenuItem>
+                            <Divider />
+                            <MenuItem onClick={logOutSubmit}>
+                                <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
+                                <ListItemText>Cerrar Sesión</ListItemText>
+                            </MenuItem>
+                        </Menu>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+
+            <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
+                {/* Barra de búsqueda */}
+                <Paper elevation={2} sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+                    <form onSubmit={handleAddToCart}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <TextField
+                                fullWidth
+                                placeholder="Código de barras del producto"
+                                value={barcode}
+                                onChange={(e) => setBarcode(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ flex: 1 }}
+                            />
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                startIcon={<ShoppingCartCheckout />}
+                                sx={{ minWidth: 200, py: 1.8, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                             >
-                            <img
-                                src="https://cdn.icon-icons.com/icons2/963/PNG/512/1477521928_10_icon-icons.com_74620.png"
-                                className="product"
-                                alt="Gráficos"
-                            />
-                            Gráficos
-                        </Dropdown.Item>
-                    <Dropdown.Item style={{color: 'black', display:'flex'}} onClick={logOutSubmit}>
-                        <img
-                        src="https://cdn.icon-icons.com/icons2/1097/PNG/512/1485477034-close2_78601.png"
-                        className="product"
-                        />
-                        Cerrar Sesión</Dropdown.Item>
-                </Dropdown.Menu>
-                </Dropdown>
+                                Agregar al carrito
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                sx={{ minWidth: 150, py: 1.8 }}
+                            >
+                                Cerrar Caja
+                            </Button>
+                        </Stack>
+                    </form>
+                </Paper>
 
-                
-            </div>
+                {/* Contenido principal */}
+                <Grid container spacing={3}>
+                    {/* Carrito */}
+                    <Grid item xs={12} lg={8}>
+                        <Card elevation={3} sx={{ borderRadius: 2, minHeight: 500 }}>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, mb: 2 }}>
+                                    <ShoppingCart sx={{ mr: 1, verticalAlign: 'middle' }} />
+                                    Carrito de Compras
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
 
-            <hr className="lineStore"></hr>
-            <div className="options-head">
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault(); // Evitar que el formulario se envíe automáticamente
-                    onSubmit({ producto: barcode });
-                    setBarcode('');
-                }}
-                style={{ display: 'flex', alignItems: 'center' }}
-            >
-            <input
-                className="findInput"
-                placeholder="Código de barras del producto"
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                required
-            ></input>
-                
-                <button className="findButton">Agregar al carrito</button>
-            </form>
-            
-            <button className="closeBox">Cerrar Caja</button>
-                
-            </div>
+                                {shoppingCar.getRowModel().rows.length === 0 ? (
+                                    <Box sx={{ textAlign: 'center', py: 8 }}>
+                                        <ShoppingCart sx={{ fontSize: 100, color: 'text.disabled', opacity: 0.3 }} />
+                                        <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
+                                            Carrito vacío
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <TableContainer sx={{ maxHeight: 400 }}>
+                                        <Table stickyHeader>
+                                            <TableHead>
+                                                {shoppingCar.getHeaderGroups().map((headerGroup) => (
+                                                    <TableRow key={headerGroup.id}>
+                                                        {headerGroup.headers.map((header) => (
+                                                            <TableCell key={header.id} sx={{ fontWeight: 700, bgcolor: '#f5f5f5' }}>
+                                                                {header.column.columnDef.header}
+                                                            </TableCell>
+                                                        ))}
+                                                        <TableCell sx={{ fontWeight: 700, bgcolor: '#f5f5f5' }}>Acciones</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableHead>
+                                            <TableBody>
+                                                {shoppingCar.getRowModel().rows.map((row) => (
+                                                    <TableRow key={row.id} hover>
+                                                        {row.getVisibleCells().map((cell) => (
+                                                            <TableCell key={cell.id}>
+                                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                            </TableCell>
+                                                        ))}
+                                                        <TableCell>
+                                                            <Stack direction="row" spacing={0.5}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="success"
+                                                                    onClick={() => onSubmit({ producto: row.original.resultProductCode })}
+                                                                >
+                                                                    <Add />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={() => deleteProductShoppingCarButtonSubmit(row.original.resultID)}
+                                                                >
+                                                                    <Delete />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="warning"
+                                                                    onClick={() => onSubmitLess({ producto: row.original.resultProductCode })}
+                                                                >
+                                                                    <Remove />
+                                                                </IconButton>
+                                                            </Stack>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
 
-            <div className="cont">
-                <div className="trolleyContainer">
-                    {shoppingCar.getRowModel().rows.length === 0 ? (
-                        <div>
-                            <div style={{display:'flex'}}>
-                                <img
-                                    src="https://cdn.icon-icons.com/icons2/2958/PNG/512/shopping_cart_caddy_ecommerce_store_icon_185958.png"
-                                    alt="shoppingCar"
-                                    style={{ opacity: '50%', marginTop:'4%', marginLeft:'20%' }}
-                                />
-                                <img
-                                    src="https://cdn.icon-icons.com/icons2/3571/PNG/512/navigation_download_down_arrow_icon_225550.png"
-                                    alt="shoppingCar"
-                                    style={{ width:'20%', maxHeight:'90px', opacity: '70%', marginTop:'10%', marginLeft:'-30%' }}
-                                />
-                            </div>
-                            
-                        </div>
-                        
-                    ) : (
-                        <table className="shoppingTableStyle">
-                            <thead className="headTableShoppingCar" >
-                                {shoppingCar.getHeaderGroups().map((headerGroup, i) => (
-                                    <tr key={i}>
-                                        {headerGroup.headers.map((headers, i) => (
-                                            <th key={i}>
-                                                {headers.column.columnDef.header}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody>
-                                {shoppingCar.getRowModel().rows.map((row, i) => (
-                                    <tr key={i}>
-                                        {row.getVisibleCells().map((cell, j) => (
-                                            <td key={j} className="celdasTableShoppingCar">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </td>
-                                        ))}
-                                        <td >
-                                            <div className="lastColumn">
-                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '25%' }} onClick={() => {
-                                                    
-                                                    onSubmit({ producto: row.original.resultProductCode});
-                                        
-                                                }}>
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/2854/PNG/512/add_plus_interface_icon_181584.png"
-                                                        style={{ borderRadius: '5px' }}
-                                                    />
-                                                </button>
-                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '2%' }} onClick={() => {
-                                                    
-                                                    deleteProductShoppingCarButtonSubmit(row.original.resultID);
-                                                }}>
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/17/PNG/256/recyclebinfilled_recycling_full_garbage_1993.png"
-                                                        alt="Eliminar"
-                                                        style={{ borderRadius: '5px' }}
-                                                    />
-                                                </button>
-                                                <button style={{ width: '30px', height: 'auto', borderRadius: '10px', marginLeft: '2%' }} onClick={() => {
-                                                    
-                                                    onSubmitLess({ producto: row.original.resultProductCode});
-                                                }}>
-                                                    <img
-                                                        src="https://cdn.icon-icons.com/icons2/2854/PNG/512/delete_remove_minus_icon_181585.png"
-                                                        style={{ borderRadius: '5px' }}
-                                                    />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-                <div className="totalContainer">
-                    <h1 style={{fontSize:'350%'}}>Total:</h1>
+                    {/* Panel derecho */}
+                    <Grid item xs={12} lg={4}>
+                        <Stack spacing={2}>
+                            {/* Total */}
+                            <Card elevation={3} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                                <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                                    <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                                        Total:
+                                    </Typography>
+                                    <Typography variant="h3" sx={{ fontWeight: 800, my: 1 }}>
+                                        ${dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0)}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
 
-                    
-                    <h1 style={{fontSize:'500%', }}>
-                        {dataShoppingCar.reduce((total, product) => total + (product.resultSalePrice * product.cont), 0)}
-                    </h1>
-                </div>
-                
-            
-                <div className="payButtonWrapper">
-                    <div className="payButtonContainer">
-                        <button className="payButton" onClick={openModalPaid}>
-                            <img
-                                src="https://cdn.icon-icons.com/icons2/3989/PNG/512/cash_currency_finance_money_dollar_icon_253833.png"
-                                className="cashImage"
-                            />
-                            <span className="textButton">Pago con efectivo</span>
-                        </button>
-                        <Modal show={showModalPayCash} onHide={handleModalClosePayCash}>
-                            <Modal.Header closeButton>
-                            <Modal.Title style={{fontSize:'30px'}} className="modalLeter">Pago</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <h1 className="estandarLetter" style={{textAlign:"center", fontSize:'2rem'}}>Seleccione opción rápida</h1>
-                                <Button variant="primary" type="button" onClick={() => handleCashPayment(1000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
-                                $ 1.000
-                                </Button>
-                                <Button variant="primary" type="button" onClick={() => handleCashPayment(2000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
-                                $ 2.000
-                                </Button>
-                                <Button variant="primary" type="button" onClick={() => handleCashPayment(5000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
-                                $ 5.000
-                                </Button>
-                                <Button variant="primary" type="button" onClick={() => handleCashPayment(10000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
-                                $ 10.000
-                                </Button>
-                                <Button variant="primary" type="button" onClick={() => handleCashPayment(20000)} className="estandarLetter" style={{fontWeight:"bold", marginTop:'5%', marginBottom:"5%", marginLeft:"1.3%", backgroundColor:'#344a57'}}>
-                                $ 20.000
-                                </Button>
-                                <h1 className="estandarLetter" style={{textAlign:"center", fontSize:'2rem'}}>O ingrese dinero recibido</h1>
-                                <Form style={{textAlign:'center'}}>
-                                    <Form.Group controlId="payCash">
-                                        <Form.Control
-                                            className="modalLeter"
-                                            style={{textAlign:'center'}}
-                                            type="text"
-                                            placeholder="Ingresa monto"
-                                            name="paycash"
-                                            value={cashAmount}
-                                            onChange={(e) => setCashAmount(e.target.value)}
-                                            required
+                            {/* Botones de pago */}
+                            <Card elevation={3} sx={{ borderRadius: 2 }}>
+                                <CardContent>
+                                    <Stack spacing={2}>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            size="large"
+                                            startIcon={<Payments />}
+                                            onClick={openModalPaid}
+                                            sx={{ py: 2, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                                        >
+                                            Pago con efectivo
+                                        </Button>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            size="large"
+                                            startIcon={<CreditCard />}
+                                            sx={{ py: 2, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+                                        >
+                                            Pago con tarjeta
+                                        </Button>
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </Stack>
+                    </Grid>
+                </Grid>
+            </Container>
+
+            {/* Modal: Monto inicial */}
+            <Dialog open={totalSalesAmount === ''} maxWidth="sm" fullWidth>
+                <DialogTitle>Monto inicial de la caja</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        label="Ingresa monto inicial"
+                        type="number"
+                        value={startingAmount}
+                        onChange={(e) => setStartingAmount(e.target.value)}
+                        sx={{ mt: 2 }}
+                        autoFocus
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={saveModalStartingAmount} variant="contained">
+                        Guardar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal: Gestionar productos */}
+            <Dialog open={showModalProduct} onClose={() => setShowModalProduct(false)} maxWidth="lg" fullWidth>
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Gestiona tus productos
+                        <IconButton onClick={() => setShowModalProduct(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12} md={4}>
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>Agregar Producto</Typography>
+                                    <Stack spacing={2} sx={{ mt: 2 }}>
+                                        <TextField
+                                            label="Nombre del producto"
+                                            value={productForm.productName}
+                                            onChange={(e) => setProductForm({ ...productForm, productName: e.target.value })}
+                                            fullWidth
                                         />
-                                    </Form.Group>
+                                        <TextField
+                                            label="Código de barras"
+                                            value={productForm.productCode}
+                                            onChange={(e) => setProductForm({ ...productForm, productCode: e.target.value })}
+                                            fullWidth
+                                        />
+                                        <TextField
+                                            label="Cantidad"
+                                            type="number"
+                                            value={productForm.productAmount}
+                                            onChange={(e) => setProductForm({ ...productForm, productAmount: e.target.value })}
+                                            fullWidth
+                                        />
+                                        <TextField
+                                            label="Precio del proveedor"
+                                            type="number"
+                                            value={productForm.priceProvider}
+                                            onChange={(e) => setProductForm({ ...productForm, priceProvider: e.target.value })}
+                                            fullWidth
+                                        />
+                                        <TextField
+                                            label="Precio de venta"
+                                            type="number"
+                                            value={productForm.salePrice}
+                                            onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })}
+                                            fullWidth
+                                        />
+                                        <Button variant="contained" onClick={addProductSubmit} fullWidth>
+                                            Agregar producto
+                                        </Button>
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={8}>
+                            <TableContainer component={Paper} variant="outlined">
+                                <Table>
+                                    <TableHead>
+                                        {tableAddEditDeleteProduct.getHeaderGroups().map((headerGroup) => (
+                                            <TableRow key={headerGroup.id}>
+                                                {headerGroup.headers.map((header) => (
+                                                    <TableCell key={header.id} sx={{ fontWeight: 700, bgcolor: '#f5f5f5' }}>
+                                                        {header.column.columnDef.header}
+                                                    </TableCell>
+                                                ))}
+                                                <TableCell sx={{ fontWeight: 700, bgcolor: '#f5f5f5' }}>Acciones</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableHead>
+                                    <TableBody>
+                                        {tableAddEditDeleteProduct.getRowModel().rows.map((row) => (
+                                            <TableRow key={row.id} hover>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </TableCell>
+                                                ))}
+                                                <TableCell>
+                                                    <Stack direction="row" spacing={1}>
+                                                        <IconButton size="small" color="error" onClick={() => deleteProductButtonSubmit(row.original.resultID)}>
+                                                            <Delete />
+                                                        </IconButton>
+                                                        <IconButton size="small" color="primary" onClick={() => handleEditProduct(row.original)}>
+                                                            <Edit />
+                                                        </IconButton>
+                                                    </Stack>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+            </Dialog>
 
-                                    <Button variant="primary" type="submit" onClick={handleCashPaymentManual} style={{marginTop:'10%', backgroundColor:'#344a57'}}>
-                                        Enviar
-                                    </Button>
-                                </Form>
-                            </Modal.Body>
-                        </Modal>
-                        
-                        <Modal show={showModalSaleSuccesful} onHide={handleModalCloseSaleSuccesful}>
-                            <Modal.Header closeButton>
-                                <Modal.Title style={{fontSize:'30px'}} className="modalLeter">¡Gracias por su compra!</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <h1 className="estandarLetter" style={{textAlign:'center'}}>Su vuelto es de</h1>
-                                <h1 className="estandarLetter" style={{textAlign:'center', fontSize:'4rem'}}>${turned}</h1>
-                            </Modal.Body>
-                        </Modal>
-                        <button className="payButton">
-                            <img
-                                src="https://cdn.icon-icons.com/icons2/3967/PNG/512/cash_finance_money_card_debit_payment_credit_icon_251663.png"
-                                className="cardImage"
-                            />
-                            <span>Pago con tarjeta</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <ToastContainer />
-        </div>
-    )
+            {/* Modal: Editar producto */}
+            <Dialog open={showModalEdit} onClose={() => setShowModalEdit(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Editar Producto</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                        <TextField
+                            label="Nombre del producto"
+                            value={productForm.productName}
+                            onChange={(e) => setProductForm({ ...productForm, productName: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Código de barras"
+                            value={productForm.productCode}
+                            onChange={(e) => setProductForm({ ...productForm, productCode: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Cantidad"
+                            type="number"
+                            value={productForm.productAmount}
+                            onChange={(e) => setProductForm({ ...productForm, productAmount: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Precio del proveedor"
+                            type="number"
+                            value={productForm.priceProvider}
+                            onChange={(e) => setProductForm({ ...productForm, priceProvider: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Precio de venta"
+                            type="number"
+                            value={productForm.salePrice}
+                            onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })}
+                            fullWidth
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowModalEdit(false)}>Cancelar</Button>
+                    <Button onClick={editProductModalSubmit} variant="contained">Guardar</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal: Gestionar empleados */}
+            <Dialog open={showModalEmployee} onClose={() => setShowModalEmployee(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Gestionar empleados</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                        <TextField
+                            label="Nombre"
+                            value={employeeForm.username}
+                            onChange={(e) => setEmployeeForm({ ...employeeForm, username: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Email"
+                            type="email"
+                            value={employeeForm.email}
+                            onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Contraseña"
+                            type="password"
+                            value={employeeForm.password}
+                            onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
+                            fullWidth
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowModalEmployee(false)}>Cancelar</Button>
+                    <Button onClick={sendRegisterSubmit} variant="contained">Agregar</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal: Pago en efectivo */}
+            <Dialog open={showModalPayCash} onClose={() => setShowModalPayCash(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Pago en Efectivo</DialogTitle>
+                <DialogContent>
+                    <Typography variant="h6" gutterBottom sx={{ mt: 2, textAlign: 'center' }}>
+                        Seleccione opción rápida
+                    </Typography>
+                    <Grid container spacing={1} sx={{ mb: 3 }}>
+                        {[1000, 2000, 5000, 10000, 20000].map((amount) => (
+                            <Grid item xs={6} sm={4} key={amount}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={() => handleCashPayment(amount)}
+                                    sx={{ py: 1.5 }}
+                                >
+                                    ${amount.toLocaleString()}
+                                </Button>
+                            </Grid>
+                        ))}
+                    </Grid>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
+                        O ingrese dinero recibido
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        label="Ingresa monto"
+                        type="number"
+                        value={cashAmount}
+                        onChange={(e) => setCashAmount(e.target.value)}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                        }}
+                        sx={{ mt: 2 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowModalPayCash(false)}>Cancelar</Button>
+                    <Button onClick={handleCashPaymentManual} variant="contained">Confirmar</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal: Venta exitosa */}
+            <Dialog open={showModalSaleSuccesful} onClose={() => setShowModalSaleSuccesful(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ textAlign: 'center' }}>
+                    <CheckCircle color="success" sx={{ fontSize: 60, mb: 1 }} />
+                    <Typography variant="h5">¡Gracias por su compra!</Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ textAlign: 'center', py: 2 }}>
+                        <Typography variant="h6" gutterBottom>Su vuelto es de</Typography>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: 'success.main' }}>
+                            ${turned}
+                        </Typography>
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
+            <ToastContainer position="bottom-right" autoClose={3000} />
+        </Box>
+    );
 }
 
 export default SalePoint;

@@ -1,50 +1,248 @@
-.notification-container{
-    display:block;
-    
+/* ========================================
+   ADMIN PAGE - PANEL DE NOTIFICACIONES
+   ======================================== */
+
+/* Contenedor principal */
+.notification-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: var(--spacing-3xl) var(--spacing-lg);
+    animation: fadeIn 0.6s ease-out;
 }
 
-.notification-tittle{
+/* Título principal */
+.notification-tittle {
     text-align: center;
-    font-size: 2.5rem;
-    color: #212338;
-}
-.table-container{
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    margin: 0 auto;
-    width: 80%;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-3xl);
+    letter-spacing: -0.02em;
+    animation: slideIn 0.8s ease-out;
 }
 
-/* Estilos para la tabla */
+/* Contenedor de la tabla */
+.table-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--color-white);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-2xl);
+    overflow: hidden;
+    animation: fadeIn 1s ease-out;
+}
+
+/* Tabla moderna */
 .table-table {
     width: 100%;
     border-collapse: separate;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    font-size: 0.7rem;
-  }
-  
-  /* Estilos para el encabezado de la tabla */
-  .head-table th {
-    background-color: #212338; /* Color de fondo del título de las columnas */
-    color: #ffffff; /* Color del texto en el título de las columnas */
-    padding: 1%;
-    font-size: 1.0rem; /* Tamaño de fuente del título de las columnas */
-    
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    
+    border-spacing: 0;
 }
- 
-  
-  /* Estilos para las celdas de la tabla */
-  .celdas {
-    border: 1px solid #000000; /* Bordes de las celdas */
-    padding: 1%;
+
+/* Encabezado de la tabla */
+.head-table {
+    background: var(--gradient-dark);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.head-table th {
+    color: var(--color-white);
+    padding: var(--spacing-lg);
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 3px solid var(--color-primary);
+}
+
+.head-table th:first-child {
+    padding-left: var(--spacing-2xl);
+    border-top-left-radius: var(--radius-xl);
+}
+
+.head-table th:last-child {
+    padding-right: var(--spacing-2xl);
+    border-top-right-radius: var(--radius-xl);
+}
+
+/* Celdas de la tabla */
+.celdas {
+    padding: var(--spacing-lg);
     font-size: 1rem;
-    background-color: #ebebeb;
+    color: var(--color-dark);
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-gray-lighter);
+    transition: all var(--transition-base);
+}
+
+.celdas:first-child {
+    padding-left: var(--spacing-2xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1.125rem;
+}
+
+.celdas:last-child {
+    padding-right: var(--spacing-2xl);
+}
+
+/* Efecto hover en filas */
+.table-table tbody tr {
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.table-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.05) 0%, rgba(79, 70, 229, 0.02) 100%);
+    transform: scale(1.01);
+}
+
+.table-table tbody tr:hover .celdas {
+    border-bottom-color: var(--color-primary-light);
+}
+
+/* Última fila sin borde inferior */
+.table-table tbody tr:last-child .celdas {
+    border-bottom: none;
+}
+
+/* Animación de entrada para filas */
+.table-table tbody tr {
+    animation: slideIn 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.table-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table-table tbody tr:nth-child(2) { animation-delay: 0.15s; }
+.table-table tbody tr:nth-child(3) { animation-delay: 0.2s; }
+.table-table tbody tr:nth-child(4) { animation-delay: 0.25s; }
+.table-table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+
+/* Badge/Pill para datos especiales */
+.badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-primary-light);
+    color: var(--color-white);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Estado vacío */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    color: var(--color-gray);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.3;
+}
+
+.empty-state-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 1024px) {
+    .table-container {
+        margin: 0 var(--spacing-md);
+        border-radius: var(--radius-xl);
+    }
     
-  }
+    .head-table th {
+        padding: var(--spacing-md);
+        font-size: 1rem;
+    }
+    
+    .celdas {
+        padding: var(--spacing-md);
+        font-size: 0.95rem;
+    }
+}
 
+@media (max-width: 768px) {
+    .notification-container {
+        padding: var(--spacing-xl) var(--spacing-sm);
+    }
+    
+    .notification-tittle {
+        font-size: 2rem;
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    /* Tabla responsive con scroll horizontal */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-table {
+        min-width: 600px;
+    }
+    
+    .head-table th,
+    .celdas {
+        padding: var(--spacing-sm);
+        font-size: 0.875rem;
+    }
+    
+    .celdas:first-child {
+        font-size: 1rem;
+    }
+}
 
-  .celdas:nth-child(1){
-    font-size: 150%; /* Tamaño de fuente para las columnas "email" y "mensaje" */
-    font-weight: bold;
+@media (max-width: 480px) {
+    .notification-tittle {
+        font-size: 1.75rem;
+    }
+    
+    .table-container {
+        margin: 0;
+        border-radius: var(--radius-lg);
+    }
+    
+    .head-table th,
+    .celdas {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .head-table th:first-child,
+    .celdas:first-child {
+        padding-left: var(--spacing-md);
+    }
+    
+    .head-table th:last-child,
+    .celdas:last-child {
+        padding-right: var(--spacing-md);
+    }
+}
+
+/* Print styles */
+@media print {
+    .notification-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .table-container {
+        box-shadow: none;
+    }
+    
+    .table-table tbody tr:hover {
+        background: none;
+        transform: none;
+    }
 }
