@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd alpha-store && npm install && npm run build",
+  "outputDirectory": "alpha-store/dist",
+  "devCommand": "cd alpha-store && npm run dev",
+  "installCommand": "cd alpha-store && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
