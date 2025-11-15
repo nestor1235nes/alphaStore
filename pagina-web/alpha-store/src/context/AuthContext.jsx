@@ -1,7 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
-import { registerRequest, loginRequest, verifyTokenRequest } from '../api/auth';
-import Cookies from 'js-cookie';
-
+import { mockUsers } from '../data/mockData';
+import { DEMO_MODE } from '../config/appConfig';
 
 export const AuthContext = createContext();
 
@@ -20,22 +19,49 @@ export const AuthProvider = ({children}) => {
     const [errors, setErrors] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const signup = async (user) =>{
+    const signup = async (userData) =>{
+        if (DEMO_MODE) {
+            // Simulación de registro en modo demo
+            setTimeout(() => {
+                const newUser = {
+                    _id: Date.now().toString(),
+                    username: userData.username,
+                    email: userData.email,
+                    createdAt: new Date().toISOString()
+                };
+                console.log('Usuario registrado (demo):', newUser);
+                // No cambiamos el usuario actual en demo
+            }, 500);
+            return;
+        }
+        
         try {
-            const res = await registerRequest(user);
+            const { registerRequest } = await import('../api/auth');
+            const res = await registerRequest(userData);
             console.log(res.data);
             setUser(res.data);
-            setAuthenticated(true);
-           
+            setisAuthenticated(true);
         } catch (error) {
             console.log(error.response)
             setErrors(error.response.data)
         }
     };
 
-    const signin = async (user) =>{
+    const signin = async (userData) =>{
+        if (DEMO_MODE) {
+            // Simulación de login en modo demo
+            setTimeout(() => {
+                const demoUser = mockUsers[0]; // Usuario admin por defecto
+                setisAuthenticated(true);
+                setUser(demoUser);
+                localStorage.setItem('demoUser', JSON.stringify(demoUser));
+            }, 500);
+            return;
+        }
+
         try {
-            const res = await loginRequest(user);
+            const { loginRequest } = await import('../api/auth');
+            const res = await loginRequest(userData);
             console.log(res);
             setisAuthenticated(true);
             setUser(res.data);
@@ -46,15 +72,14 @@ export const AuthProvider = ({children}) => {
             }
             setErrors([error.response.data.message]);
         }
-    
-
     };
 
     const signout = () => {
-        Cookies.remove("token");
+        if (DEMO_MODE) {
+            localStorage.removeItem('demoUser');
+        }
         setisAuthenticated(false);
         setUser(null);
-        
     };
 
     useEffect(() => {
@@ -64,12 +89,29 @@ export const AuthProvider = ({children}) => {
             }, 4000)
             return () => clearTimeout(timer);
         }
-
     }, [errors])
 
     useEffect(() => {
         async function checkLogin (){
-            const cookies = Cookies.get();
+            if (DEMO_MODE) {
+                // En modo demo, verificar si hay usuario en localStorage
+                const storedUser = localStorage.getItem('demoUser');
+                if (storedUser) {
+                    setisAuthenticated(true);
+                    setUser(JSON.parse(storedUser));
+                } else {
+                    // Auto-login con usuario demo
+                    const demoUser = mockUsers[0];
+                    setisAuthenticated(true);
+                    setUser(demoUser);
+                    localStorage.setItem('demoUser', JSON.stringify(demoUser));
+                }
+                setLoading(false);
+                return;
+            }
+
+            const Cookies = await import('js-cookie');
+            const cookies = Cookies.default.get();
 
             if(!cookies.token){
                 setisAuthenticated(false);
@@ -77,13 +119,13 @@ export const AuthProvider = ({children}) => {
                 return setUser(null);
             }
             try {
+                const { verifyTokenRequest } = await import('../api/auth');
                 const res = await verifyTokenRequest(cookies.token);
                 if(!res.data) {
                     setisAuthenticated(false);
                     setLoading(false);
                     return;
                 }
-                
 
                 setisAuthenticated(true);
                 setUser(res.data);
@@ -93,9 +135,6 @@ export const AuthProvider = ({children}) => {
                 setUser(null);
                 setLoading(false);
             }
-            
-                
-            
         }
         checkLogin();
     }, [])
